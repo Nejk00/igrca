@@ -1,0 +1,3 @@
+C:/Users/nejcg/CLionProjects/game/cmake-build-debug/CMakeFiles/game.dir
+C:/Users/nejcg/CLionProjects/game/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/nejcg/CLionProjects/game/cmake-build-debug/CMakeFiles/rebuild_cache.dir

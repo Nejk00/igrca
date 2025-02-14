@@ -1,0 +1,21 @@
+# ninja log v6
+2	48	7599645723706108	glm-populate-prefix/src/glm-populate-stamp/glm-populate-mkdir	18f04b50055db638
+2	48	7599645723706108	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-mkdir	18f04b50055db638
+48	21136	7599645934597345	glm-populate-prefix/src/glm-populate-stamp/glm-populate-download	ec2f34d403d8b6ed
+48	21136	7599645934597345	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-download	ec2f34d403d8b6ed
+21136	21238	7599645934637836	glm-populate-prefix/src/glm-populate-stamp/glm-populate-update	1abd3c02d457a9fd
+21136	21238	7599645934637836	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-update	1abd3c02d457a9fd
+21238	21278	7599645936018306	glm-populate-prefix/src/glm-populate-stamp/glm-populate-patch	ed4b948fe168419b
+21238	21278	7599645936018306	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-patch	ed4b948fe168419b
+21278	21319	7599645936429333	glm-populate-prefix/src/glm-populate-stamp/glm-populate-configure	18959e05b56d3fe3
+21278	21319	7599645936429333	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-configure	18959e05b56d3fe3
+21319	21360	7599645936830784	glm-populate-prefix/src/glm-populate-stamp/glm-populate-build	7e0618d115ae4486
+21319	21360	7599645936830784	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-build	7e0618d115ae4486
+21360	21401	7599645937245116	glm-populate-prefix/src/glm-populate-stamp/glm-populate-install	850f35997f36e3a5
+21360	21401	7599645937245116	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-install	850f35997f36e3a5
+21401	21442	7599645937663423	glm-populate-prefix/src/glm-populate-stamp/glm-populate-test	38333b4d767b2775
+21401	21442	7599645937663423	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-test	38333b4d767b2775
+21442	21500	7599645938234494	CMakeFiles/glm-populate-complete	8bfbee5e93489b38
+21442	21500	7599645938234494	glm-populate-prefix/src/glm-populate-stamp/glm-populate-done	8bfbee5e93489b38
+21442	21500	7599645938234494	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/CMakeFiles/glm-populate-complete	8bfbee5e93489b38
+21442	21500	7599645938234494	C:/Users/nejcg/CLionProjects/game/cmake-build-debug/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-done	8bfbee5e93489b38
