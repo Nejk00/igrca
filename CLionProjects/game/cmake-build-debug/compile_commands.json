@@ -13,12 +13,6 @@
 },
 {
   "directory": "C:/Users/nejcg/CLionProjects/game/cmake-build-debug",
-  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\GameObject.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\GameObject.cpp",
-  "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\GameObject.cpp",
-  "output": "CMakeFiles\\game.dir\\src\\GameObject.cpp.obj"
-},
-{
-  "directory": "C:/Users/nejcg/CLionProjects/game/cmake-build-debug",
   "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\Texture.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\Texture.cpp",
   "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\Texture.cpp",
   "output": "CMakeFiles\\game.dir\\src\\Texture.cpp.obj"
@@ -28,18 +22,6 @@
   "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\Map.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\Map.cpp",
   "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\Map.cpp",
   "output": "CMakeFiles\\game.dir\\src\\Map.cpp.obj"
-},
-{
-  "directory": "C:/Users/nejcg/CLionProjects/game/cmake-build-debug",
-  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\Player.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\Player.cpp",
-  "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\Player.cpp",
-  "output": "CMakeFiles\\game.dir\\src\\Player.cpp.obj"
-},
-{
-  "directory": "C:/Users/nejcg/CLionProjects/game/cmake-build-debug",
-  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\Enemy.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\Enemy.cpp",
-  "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\Enemy.cpp",
-  "output": "CMakeFiles\\game.dir\\src\\Enemy.cpp.obj"
 },
 {
   "directory": "C:/Users/nejcg/CLionProjects/game/cmake-build-debug",

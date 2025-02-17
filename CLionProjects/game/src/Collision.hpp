@@ -6,7 +6,6 @@
 
 #include "ECS/ColiderComponent.hpp"
 
-class Collision;
 
 class Collision {
     public:

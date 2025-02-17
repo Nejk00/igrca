@@ -36,6 +36,8 @@ class TileComponent : public Component {
             case 2:
                 path = "C:/Users/nejcg/CLionProjects/game/assets/dirt.png";
                 break;
+            case 3:
+                path = "C:/Users/nejcg/CLionProjects/game/assets/wall.png";
             default:
                 break;
 

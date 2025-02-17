@@ -18,20 +18,11 @@ include_directories(${SDL2_INCLUDE_DIR})
 
 add_executable(game src/main.cpp
         src/game.cpp
-        src/GameObject.cpp
         src/Texture.cpp
         src/Map.cpp
-        src/Player.cpp
-        src/Enemy.cpp
-        src/Vector2D.hpp
         src/Vector2D.cpp
-        src/ECS/Keyboard.hpp
-        src/ECS/ColiderComponent.hpp
-        src/Collision.hpp
         src/Collision.cpp
-        src/ECS/TileComponent.hpp
         src/ECS/ECS.cpp
-        src/ECS/Animation.hpp
 
 )
 

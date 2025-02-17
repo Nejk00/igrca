@@ -13,7 +13,7 @@ private:
     SDL_Texture* texture;
     SDL_Rect srcRect, destRect;
 
-    bool animated;
+    bool animated = false;
     int frames;
     int speed;
 
@@ -35,8 +35,8 @@ public:
     SpriteComponent(const char* path, bool isAnimated){
       animated = isAnimated;
 
-      Animation idle = Animation(0, 2, 300);
-      Animation walk = Animation(1, 6, 65);
+      Animation idle = Animation(0, 2, 400);
+      Animation walk = Animation(1, 6, 50);
 
       animations.emplace("idle", idle);
       animations.emplace("walk", walk);
@@ -64,15 +64,16 @@ public:
       catch(const char* izjema) {
         std::cout<<izjema<<std::endl;
       }
-      if (animated){
+      if (animated) {
         srcRect.x = srcRect.w * (int)((SDL_GetTicks() / speed) % frames);
+        srcRect.y = animIndex * transform->height;
       }
-      srcRect.y = animIndex * transform->height;
 
-      destRect.x = (int)transform->position.x;
-      destRect.y = (int)transform->position.y;
-      destRect.w = transform->width * transform->scale;
-      destRect.h = transform->height * transform->scale;
+        destRect.x = (int)transform->position.x;
+        destRect.y = (int)transform->position.y;
+        destRect.w = transform->width * transform->scale;
+        destRect.h = transform->height * transform->scale;
+
     }
     void draw() override{
       Texture :: Draw(texture, srcRect, destRect, spriteFlip);
