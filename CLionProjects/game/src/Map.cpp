@@ -1,11 +1,49 @@
-#include"Map.hpp"
+/*#include"Map.hpp"
 
 #include <ctime>
+#include <fstream>
+#include <bits/locale_classes.h>
+#include"game.hpp"
+#include<fstream>
+
+
+
+Map::~Map() {
+
+}
+
+
+Map::Map() {
+
+
+}
+
+void Map::LoadMap(std::string path, int sizeX, int sizeY) {
+    char tile;
+    std::fstream mapFile;
+    mapFile.open(path);
+    for (int y = 0; y < sizeY; y++)
+        for (int x = 0; x < sizeX; x++) {
+            mapFile.get(tile);
+            Game::AddTile(atoi(&tile) , x*32, y*32);
+            mapFile.ignore();
+        }
+    mapFile.close();
+       }
+   }
+}*/
+
+
+#include"Map.hpp"
+#include<fstream>
+
+#include <ctime>
+#include <iostream>
 #include <bits/locale_classes.h>
 
 #include"Texture.hpp"
 
-int lvl1[20][20];/* = {
+char lvl1[20][20]; /*= {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -52,7 +90,7 @@ Map::Map() {
     src.h =dest.h =32;
 }
 
-void Map::LoadMap(int arr[20][20]) {
+void Map::LoadMap(char arr[20][20]) {
     for(int row=0; row<20; row++)
         for(int clmn=0; clmn<20; clmn++) {
             map[row][clmn] = arr[row][clmn];
@@ -60,25 +98,30 @@ void Map::LoadMap(int arr[20][20]) {
 }
 
 void Map::DrawMap() {
-    int type =0;
-
-    for(int row=0; row<20; row++)
-        for(int clmn=0; clmn<20; clmn++) {
-            type = map[row][clmn];
-            dest.x = clmn * 32;
-            dest.y = row * 32;
-
+    char type;
+    std::fstream mapFile;
+    mapFile.open("C:/Users/nejcg/CLionProjects/game/assets/map.txt");
+    for (int y = 0; y < 20; y++)
+        for (int x = 0; x < 20; x++) {
+            mapFile >> type;
+            std::cout << type<< std::endl;
+            dest.x = x * 32;
+            dest.y = y * 32;
             switch(type) {
-                case 0:
+                case '0':
                     Texture :: Draw(water, src, dest);
-                    break;
-                case 1:
+                break;
+                case '1':
                     Texture :: Draw(grass, src, dest);
-                    break;
-                case 2:
+                break;
+                case '2':
                     Texture :: Draw(dirt, src, dest);
-                    break;
+                break;
             }
-        }
 
+        }
+    mapFile.close();
 }
+
+
+

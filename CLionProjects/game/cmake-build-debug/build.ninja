@@ -112,6 +112,13 @@ build CMakeFiles/game.dir/src/Collision.cpp.obj: CXX_COMPILER__game_unscanned_De
   OBJECT_DIR = CMakeFiles\game.dir
   OBJECT_FILE_DIR = CMakeFiles\game.dir\src
 
+build CMakeFiles/game.dir/src/ECS/ECS.cpp.obj: CXX_COMPILER__game_unscanned_Debug C$:/Users/nejcg/CLionProjects/game/src/ECS/ECS.cpp || cmake_object_order_depends_target_game
+  DEP_FILE = CMakeFiles\game.dir\src\ECS\ECS.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2
+  OBJECT_DIR = CMakeFiles\game.dir
+  OBJECT_FILE_DIR = CMakeFiles\game.dir\src\ECS
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target game
@@ -120,7 +127,7 @@ build CMakeFiles/game.dir/src/Collision.cpp.obj: CXX_COMPILER__game_unscanned_De
 #############################################
 # Link the executable game.exe
 
-build game.exe: CXX_EXECUTABLE_LINKER__game_Debug CMakeFiles/game.dir/src/main.cpp.obj CMakeFiles/game.dir/src/game.cpp.obj CMakeFiles/game.dir/src/GameObject.cpp.obj CMakeFiles/game.dir/src/Texture.cpp.obj CMakeFiles/game.dir/src/Map.cpp.obj CMakeFiles/game.dir/src/Player.cpp.obj CMakeFiles/game.dir/src/Enemy.cpp.obj CMakeFiles/game.dir/src/Vector2D.cpp.obj CMakeFiles/game.dir/src/Collision.cpp.obj | C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a
+build game.exe: CXX_EXECUTABLE_LINKER__game_Debug CMakeFiles/game.dir/src/main.cpp.obj CMakeFiles/game.dir/src/game.cpp.obj CMakeFiles/game.dir/src/GameObject.cpp.obj CMakeFiles/game.dir/src/Texture.cpp.obj CMakeFiles/game.dir/src/Map.cpp.obj CMakeFiles/game.dir/src/Player.cpp.obj CMakeFiles/game.dir/src/Enemy.cpp.obj CMakeFiles/game.dir/src/Vector2D.cpp.obj CMakeFiles/game.dir/src/Collision.cpp.obj CMakeFiles/game.dir/src/ECS/ECS.cpp.obj | C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a
   FLAGS = -g
   LINK_LIBRARIES = -lmingw32  -mwindows  C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a  C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a  C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\game.dir

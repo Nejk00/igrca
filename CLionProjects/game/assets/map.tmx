@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-down" width="32" height="32" tilewidth="32" tileheight="32" infinite="1" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="../../../OneDrive/Desktop/sigma.tsx"/>
+ <tileset firstgid="417" source=":/automap-tiles.tsx"/>
+ <tileset firstgid="422" source="../../../OneDrive/Desktop/voda.tsx"/>
+ <tileset firstgid="423" source="../../../OneDrive/Desktop/slap.tsx"/>
+ <tileset firstgid="424" source="../../../OneDrive/Desktop/hisa.tsx"/>
+ <tileset firstgid="425" source="../../../OneDrive/Desktop/pesk.tsx"/>
+ <tileset firstgid="426" source="../../../OneDrive/Desktop/most.tsx"/>
+ <tileset firstgid="427" source="../../../OneDrive/Desktop/voda rob.tsx"/>
+ <tileset firstgid="428" source="../../../OneDrive/Desktop/most2.tsx"/>
+ <tileset firstgid="429" source="../../../OneDrive/Desktop/pesk kot1.tsx"/>
+ <tileset firstgid="430" source="../../../OneDrive/Desktop/pesk kot2.tsx"/>
+ <tileset firstgid="431" source="../../../OneDrive/Desktop/grad.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="32" height="32">
+  <data encoding="csv">
+   <chunk x="0" y="0" width="16" height="16">
+1,1,1,1,1,1,1,1,1,423,1,1,1,1,1,1,
+1,1,424,1,1,1,1,1,1,422,1,1,1,1,1,1,
+1,1,425,1,1,1,1,1,1,422,1,1,1,1,1,1,
+1,1,429,2684354985,2684354985,2684354985,2684354985,2684354990,1,427,3221225899,1,1,1,1,1,
+1,1,1,1,1,1,1,425,1,1,422,1,1,1,1,1,
+1,1,1,1,1,1,1,1610613166,2684354985,2684354985,426,2684354985,2684354985,2684354990,1,1,
+1,1,1,1,1,1,1,1,1,1,422,1,1,425,1,1,
+1,1,1,2684354987,536871334,536871334,536871334,536871334,536871334,536871334,1610613163,1,1,425,1,1,
+1,1,2684354987,1610613163,1,1,1,1,1,1,1,1,430,3221225902,1,1,
+1,1,2147484070,1,1,1,1,1,1,1,1,1,425,1,1,1,
+1,1,2147484070,1,1,1,1,1,1,1,1,2684354987,428,2684354982,2684354982,2684354982,
+1,1,2147484070,1,1,1,1,1,2684354987,1610613158,1610613158,1610613163,425,1,1,1,
+1,1,2147484070,1,1,1,1,1,3221225894,1,1,1,425,1,1,1,
+1,1,427,3758096806,3758096806,3758096806,3758096806,2684354982,1610613163,1,1,1,425,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,431,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+</chunk>
+  </data>
+ </layer>
+</map>

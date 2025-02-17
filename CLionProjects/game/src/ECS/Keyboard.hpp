@@ -1,4 +1,5 @@
 #include"../game.hpp"
+#include<cmath>
 
 #ifndef KEYBOARD_HPP
 #define KEYBOARD_HPP
@@ -6,45 +7,44 @@
 class Keyboard : public Component {
     public:
     TransformComponent* transform;
+    SpriteComponent* sprite;
 
     void init() override {
         transform = &entity->getComponent<TransformComponent>();
+        sprite = &entity->getComponent<SpriteComponent>();
     }
     void update() override {
-        if (Game::event.type == SDL_KEYDOWN) {
-            if (Game::event.key.keysym.sym == SDLK_w) {
-                transform->velocity.y = -1;
-            }
-            if (Game::event.key.keysym.sym == SDLK_s) {
-                transform->velocity.y = 1;
-            }
-            if (Game::event.key.keysym.sym == SDLK_a) {
-                transform->velocity.x = -1;
-            }
-            if (Game::event.key.keysym.sym == SDLK_d) {
-                transform->velocity.x = 1;
-            }
+        const Uint8* keystates = SDL_GetKeyboardState(nullptr);
+
+        float velX = (keystates[SDL_SCANCODE_A] ? -1.0f : 0.0f) +(keystates[SDL_SCANCODE_D] ? 1.0f : 0.0f);
+        float velY = (keystates[SDL_SCANCODE_W] ? -1.0f : 0.0f) +(keystates[SDL_SCANCODE_S] ? 1.0f : 0.0f);
+
+        // Compute vector length
+        float length = std::sqrt(velX * velX + velY * velY);
+
+        // Normalize if necessary
+        if (length > 0) {
+            velX /= length;
+            velY /= length;
         }
 
-        if (Game::event.type == SDL_KEYUP) {
-            if (Game::event.key.keysym.sym == SDLK_w) {
-                transform->velocity.y = 0;
-            }
-            if (Game::event.key.keysym.sym == SDLK_s) {
-                transform->velocity.y = 0;
-            }
-            if (Game::event.key.keysym.sym == SDLK_a) {
-                transform->velocity.x = 0;
-            }
-            if (Game::event.key.keysym.sym == SDLK_d) {
-                transform->velocity.x = 0;
-            }
+        transform->velocity.x = velX;
+        transform->velocity.y = velY;
+
+        if (velX > 0) {
+            sprite->spriteFlip =SDL_FLIP_NONE;
+            sprite->play("walk");
+        } else if (velX < 0) {
+            sprite->spriteFlip = SDL_FLIP_HORIZONTAL;
+            sprite->play("walk");
+        } else if (velY > 0) {
+            sprite->play("walk");
+        } else if (velY < 0) {
+            sprite->play("walk");
+        } else {
+            sprite->play("idle"); // If no movement, set idle animation
         }
     }
-
-
-
-
 
 
 };

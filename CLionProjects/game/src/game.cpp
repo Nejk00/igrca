@@ -20,12 +20,14 @@ std::vector<ColiderComponent*> Game :: coliders;
 
 auto& player(manager.addEntity());
 auto& wall(manager.addEntity());
+auto& enemy(manager.addEntity());
 
-auto& tile0(manager.addEntity());
-auto& tile1(manager.addEntity());
-auto& tile2(manager.addEntity());
-
-
+enum groupLables : std::size_t {
+    groupMap,
+    groupPlayers,
+    groupEnemies,
+    groupColliders,
+};
 
 Game :: Game() {
 
@@ -59,25 +61,31 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
     }
 
     map = new Map();
+    //Map::LoadMap("C:/Users/nejcg/CLionProjects/game/assets/map.txt", 20, 20);
 
-    tile0.addComponent<TileComponent>(200, 200, 32, 32, 0);
-    tile1.addComponent<TileComponent>(250, 250, 32, 32, 1);
-    tile1.addComponent<ColiderComponent>("dirt");
-    tile2.addComponent<TileComponent>(150, 150, 32, 32, 2);
-    tile2.addComponent<ColiderComponent>("grass");
-
-    player.addComponent<TransformComponent>(2);
-    player.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/minilebron.png");
+    player.addComponent<TransformComponent>(220, 320, 28, 17, 2);
+    player.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/player.png", true);
     player.addComponent<Keyboard>();
     player.addComponent<ColiderComponent>("player");
+    player.addGroup(groupPlayers);
 
-    wall.addComponent<TransformComponent>(300.0f, 300.0f, 300, 15, 1);
+    /*enemy.addComponent<TransformComponent>(300.0f, 100.0f, 100, 100, 2);
+    enemy.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/LEBRONNNN.png");
+    enemy.addComponent<ColiderComponent>("enemy");
+    enemy.addGroup(groupEnemies);*/
+
+    wall.addComponent<TransformComponent>(300.0f, 300.0f, 300, 200, 1);
     wall.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/dirt.png");
     wall.addComponent<ColiderComponent>("wall");
+    wall.addGroup(groupEnemies);
 }
 
 
-
+void Game::AddTile(int id, int x, int y) {
+    auto& tile(manager.addEntity());
+    tile.addComponent<TileComponent>(x, y, 32, 32, id);
+    tile.addGroup(groupMap);
+}
 
 void Game::handleEvents() {
     SDL_PollEvent(&event);
@@ -93,18 +101,56 @@ void Game::handleEvents() {
 void Game :: update() {
     manager.refresh();
     manager.update();
-    for (auto cc : coliders) {
-        Collision :: AABB(player.getComponent<ColiderComponent>(), *cc);
+
+    /*for (auto cc : coliders){
+        if (Collision :: AABB(player.getComponent<ColiderComponent>(), *cc))*/
+    // Collision for walls
+    auto& playerTransform = player.getComponent<TransformComponent>();
+    auto& playerCollider = player.getComponent<ColiderComponent>().collider;
+
+    // Predict next position (top-left origin correction)
+    float nextX = playerTransform.position.x + playerTransform.velocity.x * playerTransform.speed;
+    float nextY = playerTransform.position.y + playerTransform.velocity.y * playerTransform.speed;
+
+    SDL_Rect nextPlayerCollider = playerCollider;
+    nextPlayerCollider.x = static_cast<int>(nextX);
+    nextPlayerCollider.y = static_cast<int>(nextY);
+
+        if (SDL_HasIntersection(&nextPlayerCollider, &wall.getComponent<ColiderComponent>().collider)) {
+            // Separate horizontal and vertical checks
+            SDL_Rect horizontalTest = playerCollider;
+            horizontalTest.x = static_cast<int>(nextX);
+
+            SDL_Rect verticalTest = playerCollider;
+            verticalTest.y = static_cast<int>(nextY);
+
+            if (SDL_HasIntersection(&horizontalTest, &wall.getComponent<ColiderComponent>().collider)) {
+                playerTransform.velocity.x = 0;
+            }
+            if (SDL_HasIntersection(&verticalTest, &wall.getComponent<ColiderComponent>().collider)) {
+                playerTransform.velocity.y = 0;
+            }
+        }
     }
-
-
-}
-
+auto& tiles(manager.getGroup(groupMap));
+auto& players(manager.getGroup(groupPlayers));
+auto& enemies(manager.getGroup(groupEnemies));
 
 void Game :: render() {
     SDL_RenderClear(renderer);
     map->DrawMap();
-    manager.draw();
+    /*for (auto& t : tiles) {
+        t->draw();
+    }*/
+    for (auto& p : players) {
+        p->draw();
+    }
+    for (auto& e : enemies) {
+        e->draw();
+    }
+
+    //manager.draw();
+
     SDL_RenderPresent(renderer);
 
 }
@@ -113,4 +159,3 @@ void Game::clean() {
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
 }
-

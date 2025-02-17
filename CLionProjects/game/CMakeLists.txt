@@ -30,6 +30,8 @@ add_executable(game src/main.cpp
         src/Collision.hpp
         src/Collision.cpp
         src/ECS/TileComponent.hpp
+        src/ECS/ECS.cpp
+        src/ECS/Animation.hpp
 
 )
 

@@ -21,7 +21,7 @@ class Game {
     Game();
     ~Game();
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
-
+    static void AddTile(int id, int x, int y);
     void handleEvents();
     void update();
     void render();

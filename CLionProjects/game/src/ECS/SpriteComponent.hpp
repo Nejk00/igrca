@@ -1,6 +1,9 @@
 
 #include"SDL.h"
 #include"../Texture.hpp"
+#include"Animation.hpp"
+#include<map>
+#include<exception>
 #ifndef SPRITE_HPP
 #define SPRITE_HPP
 
@@ -11,10 +14,16 @@ private:
     SDL_Rect srcRect, destRect;
 
     bool animated;
-    int frames = 0;
-    int speed = 100;
+    int frames;
+    int speed;
 
 public:
+    int animIndex=0;
+
+  std::map<const char*, Animation> animations;
+
+  SDL_RendererFlip spriteFlip = SDL_FLIP_NONE;
+
     SpriteComponent()= default;
     SpriteComponent(const char* path){
       setTex(path);
@@ -23,10 +32,17 @@ public:
       SDL_DestroyTexture(texture);
     }
 
-    SpriteComponent(const char* path, int nFrames, int speed){
-      animated = true;
-      frames = nFrames;
-      speed = speed;
+    SpriteComponent(const char* path, bool isAnimated){
+      animated = isAnimated;
+
+      Animation idle = Animation(0, 2, 300);
+      Animation walk = Animation(1, 6, 65);
+
+      animations.emplace("idle", idle);
+      animations.emplace("walk", walk);
+
+      play("idle");
+      play("walk");
       setTex(path);
     }
     void setTex(const char* path) {
@@ -41,16 +57,30 @@ public:
       srcRect.h = transform->height;
     }
     void update() override{
+      try {
+        if (frames == 0)
+          throw "deljenje z 0";
+      }
+      catch(const char* izjema) {
+        std::cout<<izjema<<std::endl;
+      }
       if (animated){
         srcRect.x = srcRect.w * (int)((SDL_GetTicks() / speed) % frames);
       }
+      srcRect.y = animIndex * transform->height;
+
       destRect.x = (int)transform->position.x;
       destRect.y = (int)transform->position.y;
       destRect.w = transform->width * transform->scale;
       destRect.h = transform->height * transform->scale;
     }
     void draw() override{
-      Texture :: Draw(texture, srcRect, destRect);
+      Texture :: Draw(texture, srcRect, destRect, spriteFlip);
+    }
+    void play(const char* animName) {
+      frames = animations[animName].frames;
+      animIndex = animations[animName].index;
+      speed = animations[animName].speed;
     }
 
 };

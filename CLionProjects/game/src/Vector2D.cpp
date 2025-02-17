@@ -28,9 +28,15 @@ Vector2D& Vector2D :: Mult(const Vector2D &v) {
     return *this;
 }
 
-Vector2D& Vector2D :: Dev(const Vector2D &v) {
-    this->x/=v.x;
-    this->y/=v.y;
+Vector2D& Vector2D::Dev(const Vector2D &v) {
+    if (v.x == 0 || v.y == 0) {
+        // Return a default vector or leave the current vector unchanged
+        this->x = 0;
+        this->y = 0;
+        return *this;
+    }
+    this->x /= v.x;
+    this->y /= v.y;
     return *this;
 }
 

@@ -24,13 +24,18 @@ class ColiderComponent : public Component {
         transform = &entity->getComponent<TransformComponent>();
 
         Game::coliders.push_back(this);
+
     }
     void update() override {
         collider.x = static_cast<int>(transform->position.x);
         collider.y = static_cast<int>(transform->position.y);
-        collider.w = transform->width;
-        collider.h = transform->height;
+        collider.w = transform->width * transform->scale;
+        collider.h = transform->height * transform->scale;
     }
+    /*void draw() override {
+        SDL_SetRenderDrawColor(Game::renderer, 0, 255, 0, 255);
+        SDL_RenderDrawRect(Game::renderer, &collider);
+    }*/
 };
 
 #endif //COLIDERCOMPONENT_HPP
