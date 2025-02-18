@@ -3,52 +3,36 @@
 #define TILECOMPONENT_HPP
 
 #include"ECS.hpp"
-#include"TransformComponent.hpp"
-#include"SpriteComponent.hpp"
 #include"SDL.h"
-#include<string>
 
 class TileComponent : public Component {
     public:
-    TransformComponent* transform;
-    SpriteComponent* sprite;
 
-    SDL_Rect tileRect;
-    int tileID;
-    char* path;
+    SDL_Texture* texture;
+    SDL_Rect srcRect, destRect;
 
     TileComponent()= default;
 
-    TileComponent(int x, int y, int w, int h, int id) {
-        tileRect.x = x;
-        tileRect.y = y;
-        tileRect.w = w;
-        tileRect.h = h;
-        tileID = id;
-
-        switch (tileID) {
-            case 0:
-                path = "C:/Users/nejcg/CLionProjects/game/assets/water.png";
-                break;
-            case 1:
-                path = "C:/Users/nejcg/CLionProjects/game/assets/grass.png";
-                break;
-            case 2:
-                path = "C:/Users/nejcg/CLionProjects/game/assets/dirt.png";
-                break;
-            case 3:
-                path = "C:/Users/nejcg/CLionProjects/game/assets/wall.png";
-            default:
-                break;
-
-        }
+    ~TileComponent() {
+        SDL_DestroyTexture(texture);
     }
-    void init() override {
-        entity->addComponent<TransformComponent>((float)tileRect.x, (float)tileRect.y, (float)tileRect.w, (float)tileRect.h, 1);
-        transform = &entity->getComponent<TransformComponent>();
-        entity->addComponent<SpriteComponent>(path);
-        sprite = &entity->getComponent<SpriteComponent>();
+
+    TileComponent(int srcX, int srcY, int xpos, int ypos, const char* path) {
+        texture = Texture::LoadTexture(path);
+
+        srcRect.x = srcX;
+        srcRect.y = srcY;
+        srcRect.w = srcRect.h = 32;
+
+        destRect.x = xpos;
+        destRect.y = ypos;
+        destRect.w = destRect.h = 32;
     }
+    void draw() override {
+        Texture::Draw(texture, srcRect, destRect, SDL_FLIP_NONE);
+    }
+
+
 
 };
 

@@ -11,13 +11,14 @@
 #include "ECS/TrackComponent.hpp"
 
 
-//map* mapa;
 SDL_Renderer* Game :: renderer = nullptr;
 SDL_Event Game :: event;
 
 Manager manager;
 
 std::vector<ColiderComponent*> Game :: coliders;
+
+const char* mapFile = "C:/Users/nejcg/CLionProjects/game/assets/map_tiles.png";
 
 auto& player(manager.addEntity());
 auto& wall(manager.addEntity());
@@ -31,6 +32,9 @@ enum groupLables : std::size_t {
     groupEnemies,
     groupColliders,
 };
+auto& tiles(manager.getGroup(groupMap));
+auto& players(manager.getGroup(groupPlayers));
+auto& enemies(manager.getGroup(groupEnemies));
 
 Game :: Game() {
 
@@ -63,8 +67,7 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
         isRunning = false;
     }
 
-    //mapa = new map();
-    Map::LoadMap("C:/Users/nejcg/CLionProjects/game/assets/map.txt", 20, 20);
+    Map::LoadMap("C:/Users/nejcg/CLionProjects/game/assets/new_map.txt", 30, 30);
 
     player.addComponent<TransformComponent>(220, 320, 28, 17, 2);
     player.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/player.png", true);
@@ -92,9 +95,9 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
 }
 
 
-void Game::AddTile(int id, int x, int y) {
+void Game::AddTile(int srcX, int srcY, int xpos, int ypos) {
     auto& tile(manager.addEntity());
-    tile.addComponent<TileComponent>(x, y, 32, 32, id);
+    tile.addComponent<TileComponent>(srcX, srcY, xpos, ypos, mapFile);
     tile.addGroup(groupMap);
 }
 
@@ -113,6 +116,13 @@ void Game :: update() {
     manager.refresh();
     manager.update();
 
+    Vector2D pVel = player.getComponent<TransformComponent>().velocity;
+    int pSpeed = player.getComponent<TransformComponent>().speed;
+
+    /*for (auto t : tiles) {
+        t->getComponent<TileComponent>().destRect.x += -(pVel.x * pSpeed);
+        t->getComponent<TileComponent>().destRect.y += -(pVel.y * pSpeed);
+    }*/
     for (auto cc : coliders) {
         auto& playerTransform = player.getComponent<TransformComponent>();
         auto& playerCollider = player.getComponent<ColiderComponent>().collider;
@@ -142,13 +152,10 @@ void Game :: update() {
         }
     }
     }
-auto& tiles(manager.getGroup(groupMap));
-auto& players(manager.getGroup(groupPlayers));
-auto& enemies(manager.getGroup(groupEnemies));
+
 
 void Game :: render() {
     SDL_RenderClear(renderer);
-    //mapa->DrawMap();
     for (auto& t : tiles) {
         t->draw();
     }
