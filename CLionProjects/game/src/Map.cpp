@@ -21,7 +21,7 @@ void Map::LoadMap(std::string path, int sizeX, int sizeY) {
     int tile;
     std::fstream mapFile;
     mapFile.open(path);
-
+    bool hasCollision;
     int srcX, srcY;
 
     for (int y = 0; y < sizeY; y++)
@@ -29,8 +29,8 @@ void Map::LoadMap(std::string path, int sizeX, int sizeY) {
             mapFile>>tile;
             srcY = (tile/10)*32;
             srcX = (tile % 10)*32;
-            Game::AddTile(srcX, srcY, x * 32, y * 32);
-            mapFile.ignore();
+            hasCollision = (tile == 0);
+            Game::AddTile(srcX, srcY, x * 32, y * 32, hasCollision);
         }
     mapFile.close();
 }

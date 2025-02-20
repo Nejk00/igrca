@@ -4,7 +4,6 @@
 
 Game *game = nullptr;
 
-
 int main(int argumentCount, char * arguments[]){
 
     const int FPS = 60;

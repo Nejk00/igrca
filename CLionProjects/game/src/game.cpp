@@ -9,10 +9,13 @@
 #include"ECS/Components.hpp"
 #include "ECS/TileComponent.hpp"
 #include "ECS/TrackComponent.hpp"
-
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 640;
 
 SDL_Renderer* Game :: renderer = nullptr;
 SDL_Event Game :: event;
+
+SDL_Rect Game :: camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 Manager manager;
 
@@ -67,38 +70,39 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
         isRunning = false;
     }
 
-    Map::LoadMap("C:/Users/nejcg/CLionProjects/game/assets/new_map.txt", 30, 30);
+    Map::LoadMap("C:/Users/nejcg/CLionProjects/game/assets/map.map", 16, 16);
 
-    player.addComponent<TransformComponent>(220, 320, 28, 17, 2);
+    player.addComponent<TransformComponent>(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 28, 17, 2);
     player.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/player.png", true);
     player.addComponent<Keyboard>();
     player.addComponent<ColiderComponent>("player");
+
+
     player.addGroup(groupPlayers);
 
     enemy.addComponent<TransformComponent>(500, 20, 32, 32, 1);
-    enemy.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/hisa.png");
-    enemy.addComponent<TrackComponent>(5);
+    enemy.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/dirt.png");
     enemy.addComponent<ColiderComponent>("enemy");
-    enemy.addGroup(groupEnemies);
+    //enemy.addComponent<TrackComponent>(5);
+    enemy.addGroup(groupMap);
 
-    wall.addComponent<TransformComponent>(300.0f, 300.0f, 10, 50, 3);
+    wall.addComponent<TransformComponent>(500.0f, 500.0f, 10, 50, 3);
     wall.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/wall.png");
     wall.addComponent<ColiderComponent>("wall");
     wall.addGroup(groupMap);
-
-    wall2.addComponent<TransformComponent>(320.0f, 360.0f, 50, 50, 1);
-    wall2.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/wall.png");
-    wall2.addComponent<ColiderComponent>("wall");
-    wall2.addGroup(groupMap);
 
 
 }
 
 
-void Game::AddTile(int srcX, int srcY, int xpos, int ypos) {
+void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
     auto& tile(manager.addEntity());
     tile.addComponent<TileComponent>(srcX, srcY, xpos, ypos, mapFile);
+    tile.addComponent<TransformComponent>(xpos, ypos, 32, 32, 1);
     tile.addGroup(groupMap);
+    if (hasCollision) {
+        tile.addComponent<ColiderComponent>("tile_" + std::to_string(xpos) + "_" + std::to_string(ypos));
+    }
 }
 
 void Game::handleEvents() {
@@ -116,18 +120,33 @@ void Game :: update() {
     manager.refresh();
     manager.update();
 
-    Vector2D pVel = player.getComponent<TransformComponent>().velocity;
+    camera.x = player.getComponent<TransformComponent>().position.x - SCREEN_WIDTH/2;
+    camera.y = player.getComponent<TransformComponent>().position.y - SCREEN_HEIGHT/2;
+
+    if (camera.x < 0) camera.x = 0;
+    if (camera.y < 0) camera.y = 0;
+    if (camera.x > SCREEN_WIDTH) camera.x = SCREEN_WIDTH;
+    if (camera.y > SCREEN_HEIGHT) camera.y = SCREEN_HEIGHT;
+    /*Vector2D pVel = player.getComponent<TransformComponent>().velocity;
     int pSpeed = player.getComponent<TransformComponent>().speed;
 
-    /*for (auto t : tiles) {
-        t->getComponent<TileComponent>().destRect.x += -(pVel.x * pSpeed);
-        t->getComponent<TileComponent>().destRect.y += -(pVel.y * pSpeed);
+    // Calculate the offset for this frame
+    Vector2D offset = { -(pVel.x * pSpeed), -(pVel.y * pSpeed) };
+
+    for (auto& t : tiles) {
+        if (t && t->hasComponent<TileComponent>()) {
+            auto& tileComponent = t->getComponent<TileComponent>();
+
+            // Apply the offset to the tile's position
+            tileComponent.destRect.x += offset.x;
+            tileComponent.destRect.y += offset.y;
+        }
     }*/
-    for (auto cc : coliders) {
+    for (auto& cc : coliders) {
         auto& playerTransform = player.getComponent<TransformComponent>();
         auto& playerCollider = player.getComponent<ColiderComponent>().collider;
 
-        // Predict next position (top-left origin correction)
+        // Predict next position
         float nextX = playerTransform.position.x + playerTransform.velocity.x * playerTransform.speed;
         float nextY = playerTransform.position.y + playerTransform.velocity.y * playerTransform.speed;
 
@@ -135,23 +154,32 @@ void Game :: update() {
         nextPlayerCollider.x = static_cast<int>(nextX);
         nextPlayerCollider.y = static_cast<int>(nextY);
 
-        if (SDL_HasIntersection(&nextPlayerCollider, &wall.getComponent<ColiderComponent>().collider)) {
-            // Separate horizontal and vertical checks
-            SDL_Rect horizontalTest = playerCollider;
-            horizontalTest.x = static_cast<int>(nextX);
-
-            SDL_Rect verticalTest = playerCollider;
-            verticalTest.y = static_cast<int>(nextY);
-
-            if (SDL_HasIntersection(&horizontalTest, &wall.getComponent<ColiderComponent>().collider)) {
-                playerTransform.velocity.x = 0;
+        // Check collision with all colliders
+        for (auto& otherColliderComponent : coliders) {
+            if (otherColliderComponent == &player.getComponent<ColiderComponent>()) {
+                continue; // Skip the player's own collider
             }
-            if (SDL_HasIntersection(&verticalTest, &wall.getComponent<ColiderComponent>().collider)) {
-                playerTransform.velocity.y = 0;
+
+            auto& otherCollider = otherColliderComponent->collider;
+
+            if (SDL_HasIntersection(&nextPlayerCollider, &otherCollider)) {
+                // Separate horizontal and vertical checks
+                SDL_Rect horizontalTest = playerCollider;
+                horizontalTest.x = static_cast<int>(nextX);
+
+                SDL_Rect verticalTest = playerCollider;
+                verticalTest.y = static_cast<int>(nextY);
+
+                if (SDL_HasIntersection(&horizontalTest, &otherCollider))
+                    playerTransform.velocity.x = 0; // Stop horizontal movement
+
+                if (SDL_HasIntersection(&verticalTest, &otherCollider))
+                    playerTransform.velocity.y = 0; // Stop vertical movement
+
             }
         }
     }
-    }
+}
 
 
 void Game :: render() {

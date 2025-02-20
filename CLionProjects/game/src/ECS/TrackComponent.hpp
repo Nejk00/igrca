@@ -7,7 +7,7 @@
 
 class TrackComponent : public Component{
     int speed;
-
+    Entity* player;
     TransformComponent* transform;
     SpriteComponent* sprite;
 
@@ -22,17 +22,15 @@ class TrackComponent : public Component{
         transform = &entity->getComponent<TransformComponent>();
         sprite = &entity->getComponent<SpriteComponent>();
     }
-    void update() override {
 
-    }
-    void update(Entity& player){
-        if (player.getComponent<TransformComponent>().position.x > transform->position.x)
+    void update() override{
+        if (player->getComponent<TransformComponent>().position.x > transform->position.x)
                 transform->velocity.x += speed;
-        else if (player.getComponent<TransformComponent>().position.x < -transform->position.x)
+        else if (player->getComponent<TransformComponent>().position.x < -transform->position.x)
                 transform->velocity.x -= speed;
-        if (player.getComponent<TransformComponent>().position.y > transform->position.y)
+        if (player->getComponent<TransformComponent>().position.y > transform->position.y)
                 transform->velocity.y += speed;
-        else if (player.getComponent<TransformComponent>().position.y < -transform->position.y)
+        else if (player->getComponent<TransformComponent>().position.y < -transform->position.y)
                 transform->velocity.y -= speed;
         
     }

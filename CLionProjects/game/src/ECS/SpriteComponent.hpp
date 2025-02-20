@@ -36,7 +36,7 @@ public:
       animated = isAnimated;
 
       Animation idle = Animation(0, 2, 400);
-      Animation walk = Animation(1, 6, 50);
+      Animation walk = Animation(1, 6, 70);
 
       animations.emplace("idle", idle);
       animations.emplace("walk", walk);
@@ -69,8 +69,8 @@ public:
         srcRect.y = animIndex * transform->height;
       }
 
-        destRect.x = (int)transform->position.x;
-        destRect.y = (int)transform->position.y;
+        destRect.x = (int)transform->position.x - Game :: camera.x;
+        destRect.y = (int)transform->position.y - Game :: camera.y;
         destRect.w = transform->width * transform->scale;
         destRect.h = transform->height * transform->scale;
 
