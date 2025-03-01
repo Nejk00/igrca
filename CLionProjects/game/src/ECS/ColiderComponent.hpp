@@ -1,6 +1,6 @@
 #ifndef COLIDERCOMPONENT_HPP
 #define COLIDERCOMPONENT_HPP
-#include<iostream>
+
 #include<string>
 #include"Components.hpp"
 #include"SDL.h"
@@ -23,7 +23,7 @@ class ColiderComponent : public Component {
             entity->addComponent<TransformComponent>();
         transform = &entity->getComponent<TransformComponent>();
 
-        Game::coliders.push_back(this);
+        Game::colliders.push_back(this);
 
     }
     void update() override {
@@ -31,7 +31,6 @@ class ColiderComponent : public Component {
         collider.y = static_cast<int>(transform->position.y);
         collider.w = transform->width * transform->scale;
         collider.h = transform->height * transform->scale;
-        std::cout<<"collider collider.x = "<<collider.x<<std::endl;
     }
     void draw() override {
         SDL_Rect tmp;

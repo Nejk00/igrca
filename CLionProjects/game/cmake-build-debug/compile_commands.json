@@ -40,5 +40,11 @@
   "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\ECS\\ECS.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\ECS\\ECS.cpp",
   "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\ECS\\ECS.cpp",
   "output": "CMakeFiles\\game.dir\\src\\ECS\\ECS.cpp.obj"
+},
+{
+  "directory": "C:/Users/nejcg/CLionProjects/game/cmake-build-debug",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.3\\bin\\mingw\\bin\\G__~1.EXE -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2 -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles\\game.dir\\src\\GameLogic.cpp.obj -c C:\\Users\\nejcg\\CLionProjects\\game\\src\\GameLogic.cpp",
+  "file": "C:\\Users\\nejcg\\CLionProjects\\game\\src\\GameLogic.cpp",
+  "output": "CMakeFiles\\game.dir\\src\\GameLogic.cpp.obj"
 }
 ]

@@ -98,6 +98,13 @@ build CMakeFiles/game.dir/src/ECS/ECS.cpp.obj: CXX_COMPILER__game_unscanned_Debu
   OBJECT_DIR = CMakeFiles\game.dir
   OBJECT_FILE_DIR = CMakeFiles\game.dir\src\ECS
 
+build CMakeFiles/game.dir/src/GameLogic.cpp.obj: CXX_COMPILER__game_unscanned_Debug C$:/Users/nejcg/CLionProjects/game/src/GameLogic.cpp || cmake_object_order_depends_target_game
+  DEP_FILE = CMakeFiles\game.dir\src\GameLogic.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2
+  OBJECT_DIR = CMakeFiles\game.dir
+  OBJECT_FILE_DIR = CMakeFiles\game.dir\src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target game
@@ -106,11 +113,11 @@ build CMakeFiles/game.dir/src/ECS/ECS.cpp.obj: CXX_COMPILER__game_unscanned_Debu
 #############################################
 # Link the executable game.exe
 
-build game.exe: CXX_EXECUTABLE_LINKER__game_Debug CMakeFiles/game.dir/src/main.cpp.obj CMakeFiles/game.dir/src/game.cpp.obj CMakeFiles/game.dir/src/Texture.cpp.obj CMakeFiles/game.dir/src/Map.cpp.obj CMakeFiles/game.dir/src/Vector2D.cpp.obj CMakeFiles/game.dir/src/Collision.cpp.obj CMakeFiles/game.dir/src/ECS/ECS.cpp.obj | C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a
+build game.exe: CXX_EXECUTABLE_LINKER__game_Debug CMakeFiles/game.dir/src/main.cpp.obj CMakeFiles/game.dir/src/game.cpp.obj CMakeFiles/game.dir/src/Texture.cpp.obj CMakeFiles/game.dir/src/Map.cpp.obj CMakeFiles/game.dir/src/Vector2D.cpp.obj CMakeFiles/game.dir/src/Collision.cpp.obj CMakeFiles/game.dir/src/ECS/ECS.cpp.obj CMakeFiles/game.dir/src/GameLogic.cpp.obj | C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a C$:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a
   FLAGS = -g
   LINK_LIBRARIES = -lmingw32  -mwindows  C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a  C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a  C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\game.dir
-  POST_BUILD = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\nejcg\CLionProjects\game\cmake-build-debug && C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/nejcg/.vcpkg-clion/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/nejcg/CLionProjects/game/cmake-build-debug/game.exe -installedDir C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/bin -OutVariable out"
+  POST_BUILD = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\nejcg\CLionProjects\game\cmake-build-debug && C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/nejcg/.vcpkg-clion/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/nejcg/CLionProjects/game/cmake-build-debug/game.exe -installedDir C:/Users/nejcg/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/bin -OutVariable out"
   PRE_LINK = cd .
   TARGET_FILE = game.exe
   TARGET_IMPLIB = libgame.dll.a
@@ -121,7 +128,7 @@ build game.exe: CXX_EXECUTABLE_LINKER__game_Debug CMakeFiles/game.dir/src/main.c
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\nejcg\CLionProjects\game\cmake-build-debug && "C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\nejcg\CLionProjects\game\cmake-build-debug && "C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -132,7 +139,7 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\nejcg\CLionProjects\game\cmake-build-debug && "C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -SC:\Users\nejcg\CLionProjects\game -BC:\Users\nejcg\CLionProjects\game\cmake-build-debug"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\nejcg\CLionProjects\game\cmake-build-debug && "C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -SC:\Users\nejcg\CLionProjects\game -BC:\Users\nejcg\CLionProjects\game\cmake-build-debug"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1

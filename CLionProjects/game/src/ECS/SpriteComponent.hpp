@@ -36,18 +36,35 @@ public:
       animated = isAnimated;
 
       Animation idle = Animation(0, 2, 400);
-      Animation walk = Animation(1, 6, 70);
+      Animation walk = Animation(3, 8, 100);
+      Animation attack = Animation(8, 8, 100);
+
+      Animation pet_idle = Animation(0, 2, 400);
+      Animation pet_walk = Animation(1, 6, 100);
+
+      Animation enemy_idle = Animation(0, 2, 400);
+      Animation enemy_walk = Animation(0, 4, 100);
 
       animations.emplace("idle", idle);
       animations.emplace("walk", walk);
+      animations.emplace("attack", attack);
+
+      animations.emplace("pet_idle", pet_idle);
+      animations.emplace("pet_walk", pet_walk);
+
+      animations.emplace("enemy_idle", enemy_idle);
+      animations.emplace("enemy_walk", enemy_walk);
 
       play("idle");
       play("walk");
+      play("attack");
       setTex(path);
     }
+
     void setTex(const char* path) {
       texture = Texture :: LoadTexture(path);
     }
+
     void init() override{
       transform = &entity->getComponent<TransformComponent>();
 

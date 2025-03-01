@@ -7,8 +7,11 @@
 #include<stdio.h>
 #include<SDL_image.h>
 #include<vector>
+#include"ECS/ECS.hpp"
+
 
 class ColiderComponent;
+class EnemyCollider;
 
 class Game {
     bool isRunning;
@@ -18,11 +21,12 @@ class Game {
     static SDL_Rect camera;
     static SDL_Renderer *renderer;
     static SDL_Event event;
-    static std::vector<ColiderComponent*> coliders;
+    static std::vector<ColiderComponent*> colliders;
     Game();
     ~Game();
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
     static void AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision);
+    static void CameraSystem();
     void handleEvents();
     void update();
     void render();

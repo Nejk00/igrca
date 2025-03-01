@@ -23,6 +23,8 @@ add_executable(game src/main.cpp
         src/Vector2D.cpp
         src/Collision.cpp
         src/ECS/ECS.cpp
+        src/GameLogic.hpp
+        src/GameLogic.cpp
 
 )
 
