@@ -79,6 +79,9 @@ Vector2D& Vector2D :: operator*(const int& i) {
     this->y*=i;
     return *this;
 }
+bool Vector2D :: operator==(const Vector2D &v) {
+    return (this->x==v.x && this->y==v.y);
+}
 
 Vector2D &Vector2D::Zero() {
     this->x=0;

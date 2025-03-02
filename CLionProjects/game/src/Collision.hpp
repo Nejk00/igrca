@@ -5,6 +5,14 @@
 #include <SDL_rect.h>
 #include "ECS/ColiderComponent.hpp"
 
+enum groupLables : std::size_t {
+    groupMap,
+    groupPlayers,
+    groupEnemies,
+    groupColliders,
+    groupPet,
+    groupProjectile,
+};
 
 class Collision {
     public:
@@ -12,6 +20,7 @@ class Collision {
     static bool AABB(const ColiderComponent& colA, const ColiderComponent& colB);
     static void CheckCollisions(Entity&, Entity&, std::vector<ColiderComponent*>&);
     static void CheckCollisions(Entity&, std::vector<Entity*>&);
+    /*static void CheckCollisions(Entity&, std::vector<Entity*>&);*/
 };
 
 

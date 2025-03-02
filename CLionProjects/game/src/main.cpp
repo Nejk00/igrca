@@ -13,7 +13,7 @@ int main(int argumentCount, char * arguments[]){
     int frameTime;
 
     game = new Game();
-    game->init("NIGGERJI V PARIZU", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 640, false);
+    game->init("game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 640, false);
 
     while (game->running()) {
 

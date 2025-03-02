@@ -43,36 +43,12 @@ class Keyboard : public Component {
             sprite->play("idle"); // If no movement, set idle animation
         }
 
-        if (!(!SDL_KEYUP == keystates[SDL_SCANCODE_SPACE])) {
-            sprite->play("attack");
-        }
-
         transform->velocity.x = velX;
         transform->velocity.y = velY;
 
-        /*bool isAttacking = false;
-        Uint32 attackStartTime = 0;
-        const Uint32 attackDuration = 1200; // Adjust to match the attack animation duration
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                if (!isAttacking) { // Start attack only if not already attacking
-                    isAttacking = true;
-                    attackStartTime = SDL_GetTicks(); // Save attack start time
-                    sprite->play("attack"); // Play attack animation
-                }
-            }
+        if (keystates[SDL_SCANCODE_SPACE]) {
+            Game :: addBullet(entity);
         }
-
-        // Ensure attack state remains active until the animation completes
-        if (isAttacking) {
-            Uint32 elapsedTime = SDL_GetTicks() - attackStartTime;
-            if (elapsedTime >= attackDuration) {
-                isAttacking = false; // Reset attack state
-                //sprite->play("idle"); // Return to idle or another appropriate animation
-            }
-        }*/
     }
 
 

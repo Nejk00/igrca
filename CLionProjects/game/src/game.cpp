@@ -25,20 +25,14 @@ auto& wall(manager.addEntity());
 auto&wall2(manager.addEntity());
 auto& enemy(manager.addEntity());
 auto& pet(manager.addEntity());
+auto& pet2(manager.addEntity());
 
 
-
-enum groupLables : std::size_t {
-    groupMap,
-    groupPlayers,
-    groupEnemies,
-    groupColliders,
-    groupPet,
-};
 auto& tiles(manager.getGroup(groupMap));
 auto& players(manager.getGroup(groupPlayers));
 auto& enemies(manager.getGroup(groupEnemies));
 auto& pets(manager.getGroup(groupPet));
+auto& projectiles(manager.getGroup(groupProjectile));
 
 Game :: Game() {
 
@@ -74,14 +68,14 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
 
     Map::LoadMap("C:/Users/nejcg/CLionProjects/game/assets/map.map", 80, 80);
 
-    player.addComponent<TransformComponent>(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 32, 32, 2, 2);
-    player.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/spritesheet.png", true);
+    player.addComponent<TransformComponent>(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 28, 17, 2, 2);
+    player.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/player.png", true);
     player.addComponent<Keyboard>();
     player.addComponent<ColiderComponent>("player");
     player.addGroup(groupPlayers);
 
-    enemy.addComponent<TransformComponent>(rand()%1000,rand()%1000, 29, 22, 2, 1);
-    enemy.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/enemy2.png", true);
+    enemy.addComponent<TransformComponent>(100, 100, 30, 22, 2, 1);
+    enemy.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/enemy.png", true);
     enemy.addComponent<ColiderComponent>("enemy");
     enemy.addGroup(groupEnemies);
 
@@ -90,6 +84,11 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
     pet.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/pet.png", true);
     pet.addComponent<ColiderComponent>("pet");
     pet.addGroup(groupPet);
+
+    pet2.addComponent<TransformComponent>(rand()%1000,rand()%1000, 32, 32, 1, 1);
+    pet2.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/pet2.png", true);
+    pet2.addComponent<ColiderComponent>("pet");
+    pet2.addGroup(groupPet);
 
     wall.addComponent<TransformComponent>(500.0f, 500.0f, 100, 60, 1);
     wall.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/wall.png");
@@ -108,14 +107,14 @@ void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
         tile.addComponent<ColiderComponent>("tile_" + std::to_string(xpos) + "_" + std::to_string(ypos));
     }
 }
-void Game::CameraSystem() {
-    camera.x = player.getComponent<TransformComponent>().position.x - SCREEN_WIDTH/2;
-    camera.y = player.getComponent<TransformComponent>().position.y - SCREEN_HEIGHT/2;
-
-    if (camera.x < 0) camera.x = 0;
-    if (camera.y < 0) camera.y = 0;//hvala
-    if (camera.x + SCREEN_WIDTH > 80*32) camera.x = 80*32 - SCREEN_WIDTH;
-    if (camera.y + SCREEN_HEIGHT > 80*32) camera.y = 80*32 - SCREEN_HEIGHT;
+void Game :: addBullet(Entity* player) {
+    int x = player->getComponent<TransformComponent>().position.x;
+    int y = player->getComponent<TransformComponent>().position.y;
+    auto& bullet(manager.addEntity());
+    bullet.addComponent<TransformComponent>(x, y, 16, 16, 1, 1);
+    bullet.addComponent<SpriteComponent>("C:/Users/nejcg/CLionProjects/game/assets/dirt.png");
+    bullet.addComponent<ColiderComponent>("bullet");
+    bullet.addGroup(groupProjectile);
 }
 
 void Game::handleEvents() {
@@ -132,14 +131,17 @@ void Game::handleEvents() {
 void Game :: update() {
     manager.refresh();
     manager.update();
+
+    //GameLogic::petMovement(player, pets);
+    //GameLogic::enemyMovement(player, enemies);
     for (auto& p : pets) {
         static bool follow = false;
-        auto& petTransform = p->getComponent<TransformComponent>();
+        //auto& petTransform = p->getComponent<TransformComponent>();
         auto& playerTransform = player.getComponent<TransformComponent>();
 
         // Calculate the direction vector
-        float directionX = playerTransform.position.x - petTransform.position.x;
-        float directionY = playerTransform.position.y - petTransform.position.y;
+        float directionX = playerTransform.position.x - p->getComponent<TransformComponent>().position.x;
+        float directionY = playerTransform.position.y - p->getComponent<TransformComponent>().position.y;
 
         // Normalize the direction vector
         float length = std::sqrt(directionX * directionX + directionY * directionY);
@@ -150,10 +152,10 @@ void Game :: update() {
 
         // Smoothly interpolate the velocity
         float lerpFactor = 0.05f;
-        float targetVelocityX = directionX * petTransform.speed;
-        float targetVelocityY = directionY * petTransform.speed;
+        float targetVelocityX = directionX * p->getComponent<TransformComponent>().speed;
+        float targetVelocityY = directionY * p->getComponent<TransformComponent>().speed;
 
-        if (Collision::AABB(player.getComponent<ColiderComponent>(), pet.getComponent<ColiderComponent>())){
+        if (Collision::AABB(player.getComponent<ColiderComponent>(), p->getComponent<ColiderComponent>())){
             if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F) {
                 follow = !follow;
             }
@@ -163,8 +165,8 @@ void Game :: update() {
 
         if (follow)
         {
-            petTransform.velocity.x += (targetVelocityX - petTransform.velocity.x) * lerpFactor;
-            petTransform.velocity.y += (targetVelocityY - petTransform.velocity.y) * lerpFactor;
+            p->getComponent<TransformComponent>().velocity.x += (targetVelocityX - p->getComponent<TransformComponent>().velocity.x) * lerpFactor;
+            p->getComponent<TransformComponent>().velocity.y += (targetVelocityY - p->getComponent<TransformComponent>().velocity.y) * lerpFactor;
         }
         if (follow == false) {
             p->getComponent<SpriteComponent>().play("pet_idle");
@@ -184,8 +186,8 @@ void Game :: update() {
 
     for (auto& e : enemies) {
         int range = 200;
-        float targetVelocityX;
-        float targetVelocityY;
+        float trgtVelocityX;
+        float trgtVelocityY;
         auto& enemyTransform = e->getComponent<TransformComponent>();
         auto& playerTransform = player.getComponent<TransformComponent>();
 
@@ -205,14 +207,16 @@ void Game :: update() {
             }
 
             // Calculate target velocity
-            targetVelocityX = directionX * enemyTransform.speed;
-            targetVelocityY = directionY * enemyTransform.speed;
+            trgtVelocityX = directionX * enemyTransform.speed;
+            trgtVelocityY = directionY * enemyTransform.speed;
         }
-        enemyTransform.velocity.x += (targetVelocityX - enemyTransform.velocity.x);
-        enemyTransform.velocity.y += (targetVelocityY - enemyTransform.velocity.y);
+        enemyTransform.velocity.x += (trgtVelocityX - enemyTransform.velocity.x);
+        enemyTransform.velocity.y += (trgtVelocityY - enemyTransform.velocity.y);
 
-
-        if (directionX > 0){
+        if (distance > range) {
+            e->getComponent<SpriteComponent>().play("enemy_idle");
+        }
+        else if (directionX > 0){
         e->getComponent<SpriteComponent>().spriteFlip = SDL_FLIP_NONE;
         e->getComponent<SpriteComponent>().play("enemy_walk");
         }
@@ -221,23 +225,45 @@ void Game :: update() {
         e->getComponent<SpriteComponent>().play("enemy_walk");
         }
     }
+    for (auto& p : projectiles) {
+        auto& playerTransform = player.getComponent<TransformComponent>();
+
+        // Get the direction the player is moving
+        float bulletVelX = playerTransform.velocity.x;
+        float bulletVelY = playerTransform.velocity.y;
+
+        // Normalize direction to ensure constant speed
+        float magnitude = sqrt(bulletVelX * bulletVelX + bulletVelY * bulletVelY);
+        if (magnitude > 0) {
+            bulletVelX /= magnitude;
+            bulletVelY /= magnitude;
+        }
+
+        // Scale the speed (adjust speed as needed)
+        float bulletSpeed = 0.1f;
+        bulletVelX *= bulletSpeed;
+        bulletVelY *= bulletSpeed;
+
+        p->getComponent<TransformComponent>().velocity.x += bulletVelX;
+        p->getComponent<TransformComponent>().velocity.y += bulletVelY;
+    }
 
 
+    for (auto& p : projectiles) {
+        for (auto& e : enemies) {
+            if (Collision::AABB(p->getComponent<ColiderComponent>(), e->getComponent<ColiderComponent>())) {
+                e->destroy();
+            }
+        }
+    }
 
 
+    GameLogic::CameraSystem(player);
 
-
-    //GameLogic::petMovement(pet, player);
-    //GameLogic::enemyMovement(enemy, player);
-
-    CameraSystem();
-
-
-
-    Collision::CheckCollisions(player, pet, colliders);
-    Collision::CheckCollisions(pet, player, colliders);
-    //Collision::CheckCollisions(player, tiles);
-    //Collision::CheckCollisions(enemy, tiles);
+    Collision::CheckCollisions(player, tiles);
+    Collision::CheckCollisions(enemy, tiles);
+    Collision::CheckCollisions(pet, tiles);
+    Collision::CheckCollisions(pet, pets);
 }
 
 
@@ -256,6 +282,9 @@ void Game :: render() {
     }
     for (auto& e : enemies) {
         e->draw();
+    }
+    for (auto& p : projectiles) {
+        p->draw();
     }
 
     //manager.draw();

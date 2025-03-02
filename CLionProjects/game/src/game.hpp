@@ -26,6 +26,7 @@ class Game {
     ~Game();
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
     static void AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision);
+    static void addBullet(Entity*);
     static void CameraSystem();
     void handleEvents();
     void update();

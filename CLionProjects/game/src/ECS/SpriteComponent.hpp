@@ -36,18 +36,18 @@ public:
       animated = isAnimated;
 
       Animation idle = Animation(0, 2, 400);
-      Animation walk = Animation(3, 8, 100);
-      Animation attack = Animation(8, 8, 100);
+      Animation walk = Animation(1, 8, 100);
+      //Animation attack = Animation(8, 8, 100);
 
       Animation pet_idle = Animation(0, 2, 400);
       Animation pet_walk = Animation(1, 6, 100);
 
-      Animation enemy_idle = Animation(0, 2, 400);
-      Animation enemy_walk = Animation(0, 4, 100);
+      Animation enemy_idle = Animation(0, 4, 100);
+      Animation enemy_walk = Animation(1, 4, 100);
 
       animations.emplace("idle", idle);
       animations.emplace("walk", walk);
-      animations.emplace("attack", attack);
+      //animations.emplace("attack", attack);
 
       animations.emplace("pet_idle", pet_idle);
       animations.emplace("pet_walk", pet_walk);
@@ -58,6 +58,12 @@ public:
       play("idle");
       play("walk");
       play("attack");
+
+      play("pet_idle");
+      play("pet_walk");
+
+      play("enemy_idle");
+      play("enemy_walk");
       setTex(path);
     }
 
