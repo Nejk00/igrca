@@ -1,5 +1,5 @@
 #include"Collision.hpp"
-//#include"ECS/ColiderComponent.hpp"
+
 
 
 bool Collision::AABB(const SDL_Rect &recA, const SDL_Rect &recB) {
@@ -22,55 +22,6 @@ bool Collision::AABB(const ColiderComponent &colA, const ColiderComponent &colB)
     }
 
 }
-
-/*void Collision::CheckCollisions(Entity& object, Entity& exclude, std::vector<ColiderComponent*>& colliders) {
-    // Get the object's transform and collider
-    auto& objectTransform = object.getComponent<TransformComponent>();
-    auto& objectCollider = object.getComponent<ColiderComponent>().collider;
-
-    // Predict the object's next position
-    float nextX = objectTransform.position.x + objectTransform.velocity.x * objectTransform.speed;
-    float nextY = objectTransform.position.y + objectTransform.velocity.y * objectTransform.speed;
-
-    SDL_Rect nextObjectCollider = objectCollider;
-    nextObjectCollider.x = static_cast<int>(nextX);
-    nextObjectCollider.y = static_cast<int>(nextY);
-
-    // Check collision with all colliders
-    for (auto& otherColliderComponent : colliders) {
-        // Skip the excluded entity's collider
-        if (otherColliderComponent == &exclude.getComponent<ColiderComponent>()) {
-            continue;
-        }
-
-        // Skip the object's own collider
-        if (otherColliderComponent == &object.getComponent<ColiderComponent>()) {
-            continue;
-        }
-
-        auto& otherCollider = otherColliderComponent->collider;
-
-        // Check if the predicted collider intersects with another collider
-        if (SDL_HasIntersection(&nextObjectCollider, &otherCollider)) {
-            // Separate horizontal and vertical checks
-            SDL_Rect horizontalTest = objectCollider;
-            horizontalTest.x = static_cast<int>(nextX);
-
-            SDL_Rect verticalTest = objectCollider;
-            verticalTest.y = static_cast<int>(nextY);
-
-            // Resolve horizontal collision
-            if (SDL_HasIntersection(&horizontalTest, &otherCollider)) {
-                objectTransform.velocity.x = 0; // Stop horizontal movement
-            }
-
-            // Resolve vertical collision
-            if (SDL_HasIntersection(&verticalTest, &otherCollider)) {
-                objectTransform.velocity.y = 0; // Stop vertical movement
-            }
-        }
-    }
-}*/
 
 void Collision::CheckCollisions(Entity& object,std::vector<Entity*>& entities) {
     // Get the object's transform and collider

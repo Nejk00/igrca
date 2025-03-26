@@ -2,6 +2,7 @@
 #include<cmath>
 #include<iostream>
 
+
 #ifndef KEYBOARD_HPP
 #define KEYBOARD_HPP
 
@@ -15,6 +16,7 @@ class Keyboard : public Component {
         sprite = &entity->getComponent<SpriteComponent>();
     }
     void update() override {
+        SDL_Event event;
         const Uint8* keystates = SDL_GetKeyboardState(nullptr);
 
         float velX = (keystates[SDL_SCANCODE_A] ? -1.0f : 0.0f) +(keystates[SDL_SCANCODE_D] ? 1.0f : 0.0f);
@@ -45,10 +47,6 @@ class Keyboard : public Component {
 
         transform->velocity.x = velX;
         transform->velocity.y = velY;
-
-        if (keystates[SDL_SCANCODE_SPACE]) {
-            Game :: addBullet(entity);
-        }
     }
 
 

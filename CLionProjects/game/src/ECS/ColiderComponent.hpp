@@ -41,6 +41,8 @@ class ColiderComponent : public Component {
         SDL_SetRenderDrawColor(Game :: renderer, 255, 0, 0, 255);
         SDL_RenderDrawRect(Game :: renderer, &tmp);
     }
+
+    bool operator==(const ColiderComponent &) const{ return ColiderComponent::tag == ColiderComponent::tag; }
 };
 
 #endif //COLIDERCOMPONENT_HPP

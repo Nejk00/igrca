@@ -3,7 +3,7 @@
 #ifndef COLLISION_HPP
 #define COLLISION_HPP
 #include <SDL_rect.h>
-#include "ECS/ColiderComponent.hpp"
+#include "ECS/Components.hpp"
 
 enum groupLables : std::size_t {
     groupMap,

@@ -7,7 +7,10 @@
 #include"Keyboard.hpp"
 #include"ColiderComponent.hpp"
 #include"TileComponent.hpp"
-
+#include"EnemyComponent.hpp"
+#include"PetComponent.hpp"
+#include"BulletComponent.hpp"
+#include"Mouse.hpp"
 
 
 

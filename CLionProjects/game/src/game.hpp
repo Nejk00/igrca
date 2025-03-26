@@ -8,6 +8,7 @@
 #include<SDL_image.h>
 #include<vector>
 #include"ECS/ECS.hpp"
+#include"Clock.hpp"
 
 
 class ColiderComponent;
@@ -22,11 +23,13 @@ class Game {
     static SDL_Renderer *renderer;
     static SDL_Event event;
     static std::vector<ColiderComponent*> colliders;
+    static const int SCREEN_HEIGHT;
+    static const int SCREEN_WIDTH;
     Game();
     ~Game();
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
     static void AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision);
-    static void addBullet(Entity*);
+    static void addBullet(Entity*, int mouseX, int mouseY);
     static void CameraSystem();
     void handleEvents();
     void update();
