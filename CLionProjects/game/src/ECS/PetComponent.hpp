@@ -8,14 +8,16 @@
 class PetComponent : public Component {
 public:
     TransformComponent* transform;
-    TransformComponent* playerTransform = nullptr;
-    TransformComponent tmpPlayerTransform;
+    TransformComponent* playerTransform;
     SpriteComponent* sprite;
     Vector2D targetVelocity;
     Entity* target;
 
     bool follow = false;
 
+    PetComponent(Entity* target) {
+        playerTransform = &target->getComponent<TransformComponent>();
+    }
     PetComponent() {}
 
     void init() override {
@@ -25,7 +27,6 @@ public:
     }
 
     void update() override {
-        if (playerTransform != nullptr) {
             float directionX = playerTransform->position.x - transform->position.x;
             float directionY = playerTransform->position.y - transform->position.y;
 
@@ -65,7 +66,6 @@ public:
                 sprite->play("pet_walk");
             }
         }
-    }
 
 };
 

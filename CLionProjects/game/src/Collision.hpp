@@ -12,6 +12,7 @@ enum groupLables : std::size_t {
     groupColliders,
     groupPet,
     groupProjectile,
+    groupTurrets,
 };
 
 class Collision {

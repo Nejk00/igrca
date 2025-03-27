@@ -7,32 +7,30 @@
 
 class EnemyComponent : public Component {
 public:
+    bool chase = true;
     TransformComponent* transform;
-    TransformComponent* playerTransform = nullptr;
-    TransformComponent tmpPlayerTransform;
+    TransformComponent* playerTransform;
     SpriteComponent* sprite;
     Vector2D targetVelocity;
     Entity* target;
 
+    EnemyComponent(Entity* target) {
+        playerTransform = &target->getComponent<TransformComponent>();
+    }
     EnemyComponent() {}
 
     void init() override {
-        if (playerTransform != nullptr) {
-            tmpPlayerTransform = *playerTransform;
-        }
         transform = &entity->getComponent<TransformComponent>();
         sprite = &entity->getComponent<SpriteComponent>();
         targetVelocity.Zero();
     }
 
     void update() override {
-        if (playerTransform != nullptr) {
-            tmpPlayerTransform = *playerTransform;
-        }
-        float directionX = tmpPlayerTransform.position.x - transform->position.x;
-        float directionY = tmpPlayerTransform.position.y - transform->position.y;
+        if (chase){
+            float directionX = playerTransform->position.x - transform->position.x;
+            float directionY = playerTransform->position.y - transform->position.y;
 
-        float distance = std::sqrt(directionX * directionX + directionY * directionY);
+            float distance = std::sqrt(directionX * directionX + directionY * directionY);
 
             // Normalize the direction vector
             if (distance > 0) {
@@ -44,20 +42,20 @@ public:
             targetVelocity.x = directionX * transform->speed;
             targetVelocity.y = directionY * transform->speed;
 
-        transform->velocity.x += (targetVelocity.x - transform->velocity.x);
-        transform->velocity.y += (targetVelocity.y - transform->velocity.y);
+            transform->velocity.x += (targetVelocity.x - transform->velocity.x);
+            transform->velocity.y += (targetVelocity.y - transform->velocity.y);
 
 
-        if (directionX > 0){
-        sprite->spriteFlip = SDL_FLIP_NONE;
-        sprite->play("enemy_walk");
-        }
-        else{
-        sprite->spriteFlip = SDL_FLIP_HORIZONTAL;
-        sprite->play("enemy_walk");
+            if (directionX > 0){
+                sprite->spriteFlip = SDL_FLIP_NONE;
+                sprite->play("enemy_walk");
+            }
+            else{
+                sprite->spriteFlip = SDL_FLIP_HORIZONTAL;
+                sprite->play("enemy_walk");
+            }
         }
     }
-
 
 };
 

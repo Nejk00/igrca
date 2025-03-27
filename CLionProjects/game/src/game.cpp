@@ -8,6 +8,7 @@
 #include<ctime>
 #include "ECS/Components.hpp"
 #include"Clock.hpp"
+#include "ECS/TurretComponent.hpp"
 const int Game :: SCREEN_WIDTH = 640;
 const int Game :: SCREEN_HEIGHT = 640;
 
@@ -32,6 +33,8 @@ auto&wall2(manager.addEntity());
 auto& enemy(manager.addEntity());
 auto& pet1(manager.addEntity());
 auto& pet2(manager.addEntity());
+auto& turret(manager.addEntity());
+auto& lebron(manager.addEntity());
 
 
 
@@ -40,13 +43,8 @@ auto& players(manager.getGroup(groupPlayers));
 auto& enemies(manager.getGroup(groupEnemies));
 auto& pets(manager.getGroup(groupPet));
 auto& projectiles(manager.getGroup(groupProjectile));
+auto& turrets = manager.getGroup(groupTurrets);
 
-Game :: Game() {
-
-}
-Game :: ~Game() {
-
-}
 
 void Game :: init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen) {
     srand(time(NULL));
@@ -75,40 +73,41 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
 
     Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
-    player.addComponent<TransformComponent>(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 28, 17, 2, 2);
+    player.addComponent<TransformComponent>(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 28, 17, 2, 6);
     player.addComponent<SpriteComponent>("assets/player.png", true);
     player.addComponent<Keyboard>();
     player.addComponent<Mouse>();
     player.addComponent<ColiderComponent>("player");
     player.addGroup(groupPlayers);
 
-    enemy.addComponent<TransformComponent>(rand()%1000,rand()%1000, 30, 22, 2, 1);
+    enemy.addComponent<TransformComponent>(500, 1000, 30, 22, 2, 1);
     enemy.addComponent<SpriteComponent>("assets/enemy.png", true);
     enemy.addComponent<ColiderComponent>("enemy");
-    enemy.addComponent<EnemyComponent>();
-    enemy.addComponent<EnemyComponent>().playerTransform = &player.getComponent<TransformComponent>();
+    enemy.addComponent<EnemyComponent>(&player);
     enemy.addGroup(groupEnemies);
 
-    pet1.addComponent<TransformComponent>(200, 200, 32, 32, 1, 1);
+    pet1.addComponent<TransformComponent>(300, 500, 32, 32, 1, 1);
     pet1.addComponent<SpriteComponent>("assets/pet2.png", true);
     pet1.addComponent<ColiderComponent>("pet");
-    pet1.addComponent<PetComponent>();
-    pet1.getComponent<PetComponent>().playerTransform = &player.getComponent<TransformComponent>();
+    pet1.addComponent<PetComponent>(&player);
     pet1.addGroup(groupPet);
 
-    pet2.addComponent<TransformComponent>(300, 300, 32, 32, 1, 1);
+    pet2.addComponent<TransformComponent>(400, 700, 32, 32, 1, 1);
     pet2.addComponent<SpriteComponent>("assets/pet2.png", true);
     pet2.addComponent<ColiderComponent>("pet2");
-    pet2.addComponent<PetComponent>();
-    pet2.getComponent<PetComponent>().playerTransform = &player.getComponent<TransformComponent>();
+    pet2.addComponent<PetComponent>(&player);
     pet2.addGroup(groupPet);
 
-    wall.addComponent<TransformComponent>(500.0f, 500.0f, 100, 60, 1);
-    wall.addComponent<SpriteComponent>("assets/wall.png");
-    wall.addComponent<ColiderComponent>("wall");
-    wall.addGroup(groupMap);
 
+    turret.addComponent<TransformComponent>(700, 700, 32, 32, 1);
+    turret.addComponent<SpriteComponent>("assets/dirt.png");
+    turret.addComponent<ColiderComponent>("turret");
+    turret.addComponent<TurretComponent>(player);
+    turret.addGroup(groupTurrets);
+    turret.addGroup(groupMap);
 
+    lebron.addComponent<TransformComponent>(1100, 1700, 100, 100, 1);
+    lebron.addComponent<SpriteComponent>("assets/lebron.png");
 }
 
 void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
@@ -130,11 +129,19 @@ void Game :: addBullet(Entity* player, int mouseX, int mouseY) {
     bullet.addComponent<BulletComponent>(mouseX, mouseY);
     bullet.addGroup(groupProjectile);
 }
+/*void changeMap() {
+    Map::sizeX = 80;
+    Map::sizeY = 80;
+    Map::LoadMap("assets/map.map", Map::sizeX, Map::sizeY);
+    player.getComponent<TransformComponent>().position.x = 100;
+    player.getComponent<TransformComponent>().position.y = 100;
+
+}*/
 void Game::handleEvents() {
     SDL_PollEvent(&event);
     switch (event.type) {
         case SDL_QUIT:
-            isRunning = false;
+             isRunning = false;
         break;
         default:
             break;
@@ -144,26 +151,35 @@ void Game::handleEvents() {
 void Game :: update() {
     manager.refresh();
     manager.update();
-
+    std::cout<<player.getComponent<TransformComponent>().position.x<<" "<<player.getComponent<TransformComponent>().position.y<<std::endl;
     for (auto& pet : pets) {
         Collision::CheckCollisions(*pet, pets);
         if (Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>()) && (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F)) {
             pet->getComponent<PetComponent>().follow = !pet->getComponent<PetComponent>().follow;
+        }
+        if(Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>())) {
+            pet->getComponent<TransformComponent>().velocity.x = 0;
+            pet->getComponent<TransformComponent>().velocity.y = 0;
+            pet->getComponent<SpriteComponent>().play("pet_idle");
         }
     }
 
     for (auto& p : projectiles) {
         for (auto& e : enemies) {
             if (Collision::AABB(p->getComponent<ColiderComponent>(), e->getComponent<ColiderComponent>())) {
-                toDestroy.push_back(e);
-                toDestroy.push_back(p);
+                e->getComponent<TransformComponent>().position.x = -5000;
+                e->getComponent<TransformComponent>().position.y = -5000;
+                e->getComponent<EnemyComponent>().chase = false;
+                //toDestroy.push_back(e);
+                //toDestroy.push_back(p);
                 break;
             }
         }
     }
 
     // Then destroy them
-    for (auto e : toDestroy) e->destroy();
+    //for (auto e : toDestroy) e->destroy();
+
 
     GameLogic::CameraSystem(player);
 
@@ -192,6 +208,8 @@ void Game :: render() {
     for (auto& p : projectiles) {
         p->draw();
     }
+    lebron.draw();
+    wall.draw();
     SDL_RenderPresent(renderer);
 
 }

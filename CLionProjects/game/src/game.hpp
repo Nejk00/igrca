@@ -15,18 +15,18 @@ class ColiderComponent;
 class EnemyCollider;
 
 class Game {
-    bool isRunning;
     SDL_Window *window;
 
-    public:
+public:
+    bool isRunning;
     static SDL_Rect camera;
     static SDL_Renderer *renderer;
     static SDL_Event event;
     static std::vector<ColiderComponent*> colliders;
     static const int SCREEN_HEIGHT;
     static const int SCREEN_WIDTH;
-    Game();
-    ~Game();
+    Game() = default;
+    ~Game() = default;
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
     static void AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision);
     static void addBullet(Entity*, int mouseX, int mouseY);

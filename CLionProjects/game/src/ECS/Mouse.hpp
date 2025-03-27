@@ -1,7 +1,8 @@
 
 #ifndef MOUSE_HPP
 #define MOUSE_HPP
-#include "BulletComponent.hpp"
+
+#include"../game.hpp"
 
 class Mouse : public Component {
     public:
@@ -32,8 +33,12 @@ class Mouse : public Component {
                 Game::addBullet(entity, mouseX, mouseY);
                 timeSinceLastBullet = 0;
             }
+            if (SDL_QUIT) {
+
+            }
             timeSinceLastBullet += Clock :: delta;
         }
+
     }
 };
 

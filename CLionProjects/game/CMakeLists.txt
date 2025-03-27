@@ -29,6 +29,7 @@ add_executable(game src/main.cpp
         src/Clock.hpp
         src/ECS/BulletComponent.hpp
         src/ECS/Mouse.hpp
+        src/ECS/TurretComponent.hpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} )
