@@ -19,8 +19,8 @@ class TileComponent : public Component {
         SDL_DestroyTexture(texture);
     }
 
-    TileComponent(int srcX, int srcY, int xpos, int ypos, const char* path) {
-        texture = Texture::LoadTexture(path);
+    TileComponent(int srcX, int srcY, int xpos, int ypos, std::string path) {
+        texture = Texture::LoadTexture(path.c_str());
 
         position.x = xpos;
         position.y = ypos;

@@ -54,6 +54,7 @@ class Entity {
     private:
     Manager& manager;
     bool active = true;
+    bool pooled = false;
     std :: vector<std :: unique_ptr<Component>> components;
 
     ComponentArray componentArray;
@@ -72,8 +73,16 @@ class Entity {
 
     }
     bool isActive() const {return active;}
-    void destroy() {active = false;}
+    bool isPooled() const {return pooled;}
 
+    void deactivate() {
+        active = false;
+        pooled = true;
+    }
+    void reactivate() {
+        active = true;
+        pooled = false;
+    }
     bool hasGroup(Group mGroup) {return groupBtSet[mGroup];}
     void addGroup(Group mGroup);
     void delGroup(Group mGroup){groupBtSet[mGroup]=false;}
@@ -122,12 +131,12 @@ class Manager {
         v.erase(
             std::remove_if(std :: begin(v),std :: end(v),
                 [i](Entity* mEntity) {
-                    return !mEntity->isActive() || !mEntity->hasGroup(i);
+                    return !mEntity->isActive() || !mEntity->hasGroup(i)/* && !mEntity->isPooled()*/;
         }),std::end(v));
     }
 
         entities.erase(std::remove_if(std :: begin(entities), std :: end(entities), [](const std :: unique_ptr<Entity> &mEntity) {
-            return !mEntity -> isActive();
+            return !mEntity -> isActive() /*&& !mEntity -> isPooled()*/;
         }),
         std :: end(entities));
     }
@@ -141,6 +150,12 @@ class Manager {
     }
 
     Entity& addEntity() {
+        for (auto& e : entities) {
+            if (e->isPooled()) {
+                e->reactivate();
+                return *e;
+            }
+        }
         Entity* e = new Entity(*this);
         std :: unique_ptr<Entity> uPtr{e};
         entities.emplace_back(std::move(uPtr));

@@ -54,9 +54,6 @@ public:
             if (follow == false) {
                 sprite->play("pet_idle");
             }
-           /* else if (Collision::AABB(target->getComponent<ColiderComponent>(), entity->getComponent<ColiderComponent>())){
-                sprite->play("pet_idle");
-            }*/
             else if (directionX > 0){
                 sprite->spriteFlip = SDL_FLIP_NONE;
                 sprite->play("pet_walk");

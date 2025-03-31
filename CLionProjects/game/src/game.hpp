@@ -19,6 +19,7 @@ class Game {
 
 public:
     bool isRunning;
+    static bool inDungeon;
     static SDL_Rect camera;
     static SDL_Renderer *renderer;
     static SDL_Event event;
@@ -31,6 +32,8 @@ public:
     static void AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision);
     static void addBullet(Entity*, int mouseX, int mouseY);
     static void CameraSystem();
+    static void changeMap();
+    static void Dungeon();
     void handleEvents();
     void update();
     void render();

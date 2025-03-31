@@ -12,6 +12,8 @@
 const int Game :: SCREEN_WIDTH = 640;
 const int Game :: SCREEN_HEIGHT = 640;
 
+bool Game :: inDungeon = false;
+
 SDL_Renderer* Game :: renderer = nullptr;
 SDL_Event Game :: event;
 
@@ -20,12 +22,14 @@ SDL_Rect Game :: camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 Manager manager;
 
 std::vector<ColiderComponent*> Game :: colliders;
-std::vector<Entity*> toDestroy;
+
+std::vector<Entity*> bulletPool;
+std::vector<Entity*> enemyPool;
 
 int Map::sizeX = 60;
 int Map::sizeY = 60;
 
-const char* mapFile = "assets/map_tiles.png";
+std::string  mapFile = "assets/map_tiles.png";
 
 auto& player(manager.addEntity());
 auto& wall(manager.addEntity());
@@ -35,6 +39,7 @@ auto& pet1(manager.addEntity());
 auto& pet2(manager.addEntity());
 auto& turret(manager.addEntity());
 auto& lebron(manager.addEntity());
+auto& lab(manager.addEntity());
 
 
 
@@ -71,9 +76,73 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
         isRunning = false;
     }
 
-    Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
+        Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
-    player.addComponent<TransformComponent>(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 28, 17, 2, 6);
+        lab.addComponent<TransformComponent>(800, 450, 50, 50, 1);
+        lab.addComponent<SpriteComponent>("assets/dirt.png");
+        lab.addComponent<ColiderComponent>("lab");
+        lab.addGroup(groupMap);
+
+        //enemy.addComponent<TransformComponent>(500, 1000, 30, 22, 2, 1);
+        //enemy.addComponent<SpriteComponent>("assets/enemy.png", true);
+        //enemy.addComponent<ColiderComponent>("enemy");
+        //enemy.addComponent<EnemyComponent>(&player);
+        //enemy.addGroup(groupEnemies);
+//
+        //pet1.addComponent<TransformComponent>(300, 500, 32, 32, 1, 1);
+        //pet1.addComponent<SpriteComponent>("assets/pet2.png", true);
+        //pet1.addComponent<ColiderComponent>("pet");
+        //pet1.addComponent<PetComponent>(&player);
+        //pet1.addGroup(groupPet);
+//
+        //pet2.addComponent<TransformComponent>(400, 700, 32, 32, 1, 1);
+        //pet2.addComponent<SpriteComponent>("assets/pet2.png", true);
+        //pet2.addComponent<ColiderComponent>("pet2");
+        //pet2.addComponent<PetComponent>(&player);
+        //pet2.addGroup(groupPet);
+//
+//
+        //turret.addComponent<TransformComponent>(450, 650, 32, 32, 1);
+        //turret.addComponent<SpriteComponent>("assets/dirt.png");
+        //turret.addComponent<ColiderComponent>("turret");
+        //turret.addComponent<TurretComponent>(player);
+        //turret.addGroup(groupTurrets);
+
+        player.addComponent<TransformComponent>(256, 132, 28, 17, 2, 6);
+        player.addComponent<SpriteComponent>("assets/player.png", true);
+        player.addComponent<Keyboard>();
+        player.addComponent<Mouse>();
+        player.addComponent<ColiderComponent>("player");
+        player.addGroup(groupPlayers);
+}
+
+void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
+    auto& tile(manager.addEntity());
+    tile.addComponent<TileComponent>(srcX, srcY, xpos, ypos, mapFile);
+    tile.addComponent<TransformComponent>(xpos, ypos, 32, 32, 1);
+    tile.addGroup(groupMap);
+    if (hasCollision) {
+        tile.addComponent<ColiderComponent>("tile_" + std::to_string(xpos) + "_" + std::to_string(ypos));
+    }
+}
+void Game :: addBullet(Entity* player, int mouseX, int mouseY) {
+    int x = player->getComponent<TransformComponent>().position.x;
+    int y = player->getComponent<TransformComponent>().position.y;
+    auto& bullet(manager.addEntity());
+    bullet.addComponent<TransformComponent>(x, y, 10, 10, 1, 1);
+    bullet.addComponent<SpriteComponent>("assets/dirt.png");
+    bullet.addComponent<ColiderComponent>("bullet");
+    bullet.addComponent<BulletComponent>(mouseX, mouseY);
+    bullet.addGroup(groupProjectile);
+}
+
+void Game :: changeMap() {
+    mapFile = "assets/lab_tiles.png";
+    tiles.clear();
+    player.deactivate();
+    lab.deactivate();
+    Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
+    player.addComponent<TransformComponent>(256, 132, 28, 17, 2, 6);
     player.addComponent<SpriteComponent>("assets/player.png", true);
     player.addComponent<Keyboard>();
     player.addComponent<Mouse>();
@@ -98,45 +167,14 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
     pet2.addComponent<PetComponent>(&player);
     pet2.addGroup(groupPet);
 
-
-    turret.addComponent<TransformComponent>(700, 700, 32, 32, 1);
+    turret.addComponent<TransformComponent>(450, 650, 32, 32, 1);
     turret.addComponent<SpriteComponent>("assets/dirt.png");
     turret.addComponent<ColiderComponent>("turret");
     turret.addComponent<TurretComponent>(player);
     turret.addGroup(groupTurrets);
-    turret.addGroup(groupMap);
 
-    lebron.addComponent<TransformComponent>(1100, 1700, 100, 100, 1);
-    lebron.addComponent<SpriteComponent>("assets/lebron.png");
-}
 
-void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
-    auto& tile(manager.addEntity());
-    tile.addComponent<TileComponent>(srcX, srcY, xpos, ypos, mapFile);
-    tile.addComponent<TransformComponent>(xpos, ypos, 32, 32, 1);
-    tile.addGroup(groupMap);
-    if (hasCollision) {
-        tile.addComponent<ColiderComponent>("tile_" + std::to_string(xpos) + "_" + std::to_string(ypos));
-    }
 }
-void Game :: addBullet(Entity* player, int mouseX, int mouseY) {
-    int x = player->getComponent<TransformComponent>().position.x;
-    int y = player->getComponent<TransformComponent>().position.y;
-    auto& bullet(manager.addEntity());
-    bullet.addComponent<TransformComponent>(x, y, 16, 16, 1, 1);
-    bullet.addComponent<SpriteComponent>("assets/dirt.png");
-    bullet.addComponent<ColiderComponent>("bullet");
-    bullet.addComponent<BulletComponent>(mouseX, mouseY);
-    bullet.addGroup(groupProjectile);
-}
-/*void changeMap() {
-    Map::sizeX = 80;
-    Map::sizeY = 80;
-    Map::LoadMap("assets/map.map", Map::sizeX, Map::sizeY);
-    player.getComponent<TransformComponent>().position.x = 100;
-    player.getComponent<TransformComponent>().position.y = 100;
-
-}*/
 void Game::handleEvents() {
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -151,7 +189,10 @@ void Game::handleEvents() {
 void Game :: update() {
     manager.refresh();
     manager.update();
-    std::cout<<player.getComponent<TransformComponent>().position.x<<" "<<player.getComponent<TransformComponent>().position.y<<std::endl;
+
+    //turret.getComponent<TurretComponent>().posX = player.getComponent<TransformComponent>().position.x;
+    //turret.getComponent<TurretComponent>().posY = player.getComponent<TransformComponent>().position.y;
+
     for (auto& pet : pets) {
         Collision::CheckCollisions(*pet, pets);
         if (Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>()) && (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F)) {
@@ -166,19 +207,33 @@ void Game :: update() {
 
     for (auto& p : projectiles) {
         for (auto& e : enemies) {
-            if (Collision::AABB(p->getComponent<ColiderComponent>(), e->getComponent<ColiderComponent>())) {
-                e->getComponent<TransformComponent>().position.x = -5000;
-                e->getComponent<TransformComponent>().position.y = -5000;
-                e->getComponent<EnemyComponent>().chase = false;
-                //toDestroy.push_back(e);
-                //toDestroy.push_back(p);
-                break;
+            if (e->isActive() && p->isActive()) {
+                if (Collision::AABB(p->getComponent<ColiderComponent>(), e->getComponent<ColiderComponent>())) {
+                    p->deactivate();
+                    bulletPool.push_back(p);
+                    e->deactivate();
+                    enemyPool.push_back(e);
+                    break;
+                }
+            }
+        }
+    }
+    for (auto& p : projectiles) {
+        for (auto& t : tiles) {
+            if (t->hasComponent<ColiderComponent>()) {
+                if (Collision::AABB(p->getComponent<ColiderComponent>(), t->getComponent<ColiderComponent>())) {
+                    p->deactivate();
+                    bulletPool.push_back(p);
+                }
             }
         }
     }
 
-    // Then destroy them
-    //for (auto e : toDestroy) e->destroy();
+    if (Collision::AABB(player.getComponent<ColiderComponent>(), lab.getComponent<ColiderComponent>())) {
+        if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F) {
+            changeMap();
+        }
+    }
 
 
     GameLogic::CameraSystem(player);
@@ -196,6 +251,9 @@ void Game :: render() {
     for (auto& t : tiles) {
         t->draw();
     }
+    for (auto& t : turrets) {
+        t->draw();
+    }
     for (auto& p : pets) {
         p->draw();
     }
@@ -208,8 +266,7 @@ void Game :: render() {
     for (auto& p : projectiles) {
         p->draw();
     }
-    lebron.draw();
-    wall.draw();
+
     SDL_RenderPresent(renderer);
 
 }

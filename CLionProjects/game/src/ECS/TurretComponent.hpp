@@ -5,7 +5,7 @@
 #include"../game.hpp"
 
 class TurretComponent : public Component {
-    public:
+public:
     int range = 300;
     bool sight = false;
     int timeSinceLastBullet = 1e9;
@@ -15,10 +15,10 @@ class TurretComponent : public Component {
     float dx = 0, dy = 0;
     TransformComponent* transform;
 
-   TurretComponent(Entity& target){
-       posX = target.getComponent<TransformComponent>().position.x;
-       posY = target.getComponent<TransformComponent>().position.y;
-       targetTransform = &target.getComponent<TransformComponent>();
+    TurretComponent(Entity& target){
+        posX = target.getComponent<TransformComponent>().position.x;
+        posY = target.getComponent<TransformComponent>().position.y;
+        targetTransform = &target.getComponent<TransformComponent>();
     }
     TurretComponent() = default;
     ~TurretComponent() = default;

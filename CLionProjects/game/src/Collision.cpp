@@ -24,7 +24,9 @@ bool Collision::AABB(const ColiderComponent &colA, const ColiderComponent &colB)
 }
 
 void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& entities) {
-        if (object.hasComponent<TransformComponent>()){
+        if (!object.isActive() || !object.hasComponent<TransformComponent>() || !object.hasComponent<ColiderComponent>()) {
+            return;
+        }
         auto& objectTransform = object.getComponent<TransformComponent>();
         auto& objectCollider = object.getComponent<ColiderComponent>().collider;
 
@@ -48,7 +50,7 @@ void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& entities) 
 
             // Skip checking collision with itself
             if (object.hasGroup(groupPlayers)) {
-                if (entity->hasGroup(groupEnemies) || entity->hasGroup(groupPet) || entity->hasGroup(groupPlayers)) {
+                if (entity->hasGroup(groupEnemies) || entity->hasGroup(groupPet) || entity->getComponent<ColiderComponent>().tag == "lab") {
                     continue;
                 }
             }
@@ -76,8 +78,8 @@ void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& entities) 
                 }
             }
         }
-    }
 }
+
 
 /*void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& tiles) {
     // Get the object's transform and collider
