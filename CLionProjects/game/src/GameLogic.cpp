@@ -10,6 +10,6 @@ void GameLogic :: CameraSystem(Entity& player) {
 
     if (Game::camera.x < 0) Game::camera.x = 0;
     if (Game::camera.y < 0) Game::camera.y = 0;
-    if (Game::camera.x + 640 > Map::sizeX * 32) Game::camera.x = Map::sizeX * 32 - Game :: SCREEN_WIDTH;
-    if (Game::camera.y + 640 > Map::sizeY * 32) Game::camera.y = Map::sizeY * 32 - Game :: SCREEN_HEIGHT;
+    if (Game::camera.x + Game::SCREEN_WIDTH > Map::sizeX * 32) Game::camera.x = Map::sizeX * 32 - Game :: SCREEN_WIDTH;
+    if (Game::camera.y + Game::SCREEN_HEIGHT > Map::sizeY * 32) Game::camera.y = Map::sizeY * 32 - Game :: SCREEN_HEIGHT;
 }

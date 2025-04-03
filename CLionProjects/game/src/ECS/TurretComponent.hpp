@@ -9,16 +9,17 @@ public:
     int range = 300;
     bool sight = false;
     int timeSinceLastBullet = 1e9;
-    int posX = 0, posY = 0;
-    TransformComponent* targetTransform;
+
+    float posX = 0, posY =0;
+
     float distanceSquared = 0;
     float dx = 0, dy = 0;
     TransformComponent* transform;
+    TransformComponent* targetTransform;
+    TransformComponent tmpTransform;
 
-    TurretComponent(Entity& target){
-        posX = target.getComponent<TransformComponent>().position.x;
-        posY = target.getComponent<TransformComponent>().position.y;
-        targetTransform = &target.getComponent<TransformComponent>();
+    TurretComponent(Entity* target){
+        targetTransform = &target->getComponent<TransformComponent>();
     }
     TurretComponent() = default;
     ~TurretComponent() = default;
@@ -29,8 +30,14 @@ public:
     }
 
     void update() override {
-        dx = transform->position.x - targetTransform->position.x;
-        dy = transform->position.y - targetTransform->position.y;
+        if (targetTransform) {
+            tmpTransform = *targetTransform;
+        }
+        posX = tmpTransform.position.x;
+        posY = tmpTransform.position.y;
+
+        dx = transform->position.x - tmpTransform.position.x;
+        dy = transform->position.y - tmpTransform.position.y;
         distanceSquared = dx * dx + dy * dy;
 
         if (distanceSquared < range * range)
@@ -39,11 +46,10 @@ public:
             sight = false;
 
         if (timeSinceLastBullet > 150 && sight) {
-            Game::addBullet(entity, posX, posY);
+            Game::addBullet(entity, (int)posX, (int)posY);
             timeSinceLastBullet = 0;
         }
         timeSinceLastBullet += Clock :: delta;
-        std::cout << posX << ", " << posY << std::endl;
     }
 };
 

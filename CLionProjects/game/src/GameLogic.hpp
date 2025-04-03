@@ -5,7 +5,7 @@
 #include"ECS/ColiderComponent.hpp"
 #include<vector>
 
-static bool follow = false;
+//static bool follow = false;
 
 class GameLogic {
     public:

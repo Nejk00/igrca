@@ -23,6 +23,9 @@ class ColiderComponent : public Component {
             entity->addComponent<TransformComponent>();
         transform = &entity->getComponent<TransformComponent>();
 
+        collider.w = transform->width * transform->scale;
+        collider.h = transform->height * transform->scale;
+
         Game::colliders.push_back(this);
 
     }
@@ -38,8 +41,8 @@ class ColiderComponent : public Component {
         tmp.y = collider.y - Game :: camera.y;
         tmp.w = collider.w;
         tmp.h = collider.h;
-        SDL_SetRenderDrawColor(Game :: renderer, 255, 0, 0, 255);
-        SDL_RenderDrawRect(Game :: renderer, &tmp);
+        /*SDL_SetRenderDrawColor(Game :: renderer, 255, 0, 0, 255);
+        SDL_RenderDrawRect(Game :: renderer, &tmp);*/
     }
 
     bool operator==(const ColiderComponent &) const{ return ColiderComponent::tag == ColiderComponent::tag; }

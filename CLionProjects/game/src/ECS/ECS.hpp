@@ -75,6 +75,10 @@ class Entity {
     bool isActive() const {return active;}
     bool isPooled() const {return pooled;}
 
+    void destroy() {
+        active = false;
+    }
+
     void deactivate() {
         active = false;
         pooled = true;

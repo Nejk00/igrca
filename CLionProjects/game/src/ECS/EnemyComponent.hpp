@@ -13,9 +13,11 @@ public:
     SpriteComponent* sprite;
     Vector2D targetVelocity;
     Entity* target;
+    std::string type;
 
-    EnemyComponent(Entity* target) {
+    EnemyComponent(Entity* target, std::string object) {
         playerTransform = &target->getComponent<TransformComponent>();
+        type = object;
     }
     EnemyComponent() {}
 
@@ -26,9 +28,16 @@ public:
     }
 
     void update() override {
-        if (chase){
-            float directionX = playerTransform->position.x - transform->position.x;
-            float directionY = playerTransform->position.y - transform->position.y;
+        float directionX = playerTransform->position.x - transform->position.x;
+        float directionY = playerTransform->position.y - transform->position.y;
+
+        if (!chase) {
+            transform->velocity.x = 0;
+            transform->velocity.y = 0;
+        }
+        else{
+            //float directionX = playerTransform->position.x - transform->position.x;
+            //float directionY = playerTransform->position.y - transform->position.y;
 
             float distance = std::sqrt(directionX * directionX + directionY * directionY);
 
@@ -45,17 +54,36 @@ public:
             transform->velocity.x += (targetVelocity.x - transform->velocity.x);
             transform->velocity.y += (targetVelocity.y - transform->velocity.y);
 
-
-            if (directionX > 0){
+        }
+        if (type == "enemy") {
+            if (!chase) {
+                sprite->play("enemy_idle");
+            }
+            else if (directionX > 0){
                 sprite->spriteFlip = SDL_FLIP_NONE;
                 sprite->play("enemy_walk");
             }
-            else{
+            else if (directionX < 0){
                 sprite->spriteFlip = SDL_FLIP_HORIZONTAL;
                 sprite->play("enemy_walk");
             }
         }
+        else if (type == "wolf") {
+            if (!chase) {
+                sprite->play("wolf_idle");
+            }
+            else if (directionX > 0) {
+                sprite->spriteFlip = SDL_FLIP_HORIZONTAL;
+                sprite->play("wolf_enemy");
+            }
+            else if(directionX < 0){
+                sprite->spriteFlip = SDL_FLIP_NONE;
+                sprite->play("wolf_enemy");
+            }
+        }
     }
+
+
 
 };
 

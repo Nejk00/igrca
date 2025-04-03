@@ -3,6 +3,8 @@
 #include"../Texture.hpp"
 #include"Animation.hpp"
 #include<map>
+#include<string>
+#include<ctime>
 #include<exception>
 #ifndef SPRITE_HPP
 #define SPRITE_HPP
@@ -14,10 +16,14 @@ private:
     SDL_Rect srcRect, destRect;
 
     bool animated = false;
-    int frames;
-    int speed;
+    int frames = 1;
+    int speed = 1;
+
+    std::string tag;
+    std::string animation;
 
 public:
+    const char *Texture;
     int animIndex=0;
 
   std::map<const char*, Animation> animations;
@@ -26,7 +32,24 @@ public:
 
     SpriteComponent()= default;
     SpriteComponent(const char* path){
+      Texture = path;
       setTex(path);
+    }
+  SpriteComponent(bool random, const char * tag) {
+      srand(time(NULL));
+      if (random && std::string(tag) == "pet") {
+        if (rand()%2 == 0) {
+          setTex("assets/pet.png");
+        }
+        else {
+          setTex("assets/pet2.png");
+        }
+      }
+      else if (random && std::string(tag) == "enemy") {
+        /*if (rand()%2 == 0) */{
+          setTex("assets/enemy.png");
+        }
+      }
     }
     ~SpriteComponent() {
       SDL_DestroyTexture(texture);
@@ -45,15 +68,25 @@ public:
       Animation enemy_idle = Animation(0, 4, 100);
       Animation enemy_walk = Animation(1, 4, 100);
 
+      Animation wolf_enemy = Animation(0, 5, 100);
+      Animation wolf_idle = Animation(1, 6, 150);
+
+      Animation bullet = Animation(0, 2, 150);
+
       animations.emplace("idle", idle);
       animations.emplace("walk", walk);
-      //animations.emplace("attack", attack);
+
 
       animations.emplace("pet_idle", pet_idle);
       animations.emplace("pet_walk", pet_walk);
 
       animations.emplace("enemy_idle", enemy_idle);
       animations.emplace("enemy_walk", enemy_walk);
+
+      animations.emplace("wolf_enemy", wolf_enemy);
+      animations.emplace("wolf_idle", wolf_idle);
+
+      animations.emplace("bullet", bullet);
 
       play("idle");
       play("walk");
@@ -64,6 +97,12 @@ public:
 
       play("enemy_idle");
       play("enemy_walk");
+
+      play("wolf_enemy");
+      play("wolf_idle");
+
+      play("bullet");
+
       setTex(path);
     }
 

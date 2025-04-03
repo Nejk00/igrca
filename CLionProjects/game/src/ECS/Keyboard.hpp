@@ -30,6 +30,13 @@ class Keyboard : public Component {
             velY /= length;
         }
 
+        if (keystates[SDL_SCANCODE_LSHIFT]) {
+            transform->speed = 4;
+        }
+        else {
+            transform->speed = 3;
+        }
+
         if (velX > 0) {
             sprite->spriteFlip =SDL_FLIP_NONE;
             sprite->play("walk");

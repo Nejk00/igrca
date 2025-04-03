@@ -80,6 +80,25 @@ void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& entities) 
         }
 }
 
+bool Collision :: blockVision(const SDL_Rect &enemy, const SDL_Rect &player, std::vector<Entity*>& obstacles) {
+    SDL_Rect losBox;
+
+    // Create a bounding box that contains both the enemy and player
+    losBox.x = std::min(enemy.x, player.x);
+    losBox.y = std::min(enemy.y, player.y);
+    losBox.w = std::abs(enemy.x - player.x);
+    losBox.h = std::abs(enemy.y - player.y);
+
+    // Check if any obstacle is inside this box
+    for (auto& obstacle : obstacles) {
+        if (obstacle->hasComponent<ColiderComponent>()) {
+            if (SDL_HasIntersection(&losBox, &obstacle->getComponent<ColiderComponent>().collider)) {
+                return true; // Vision blocked
+            }
+        }
+    }
+    return false; // No obstacles, enemy can see player
+}
 
 /*void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& tiles) {
     // Get the object's transform and collider

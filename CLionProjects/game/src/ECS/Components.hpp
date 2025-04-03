@@ -10,10 +10,9 @@
 #include"EnemyComponent.hpp"
 #include"PetComponent.hpp"
 #include"BulletComponent.hpp"
-#include"Mouse.hpp"
 #include"TurretComponent.hpp"
-
-
+#include"HPComponent.hpp"
+#include"PlayerComponent.hpp"
 
 
 

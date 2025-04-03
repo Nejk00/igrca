@@ -26,13 +26,22 @@ public:
     static std::vector<ColiderComponent*> colliders;
     static const int SCREEN_HEIGHT;
     static const int SCREEN_WIDTH;
+    static int all_pets;
+
+    SDL_Texture *bulletTexture;
+    SDL_Texture *hpTexture;
+    SDL_Texture *missingHpTexture;
+    SDL_Texture *game_overTexture;
+    SDL_Texture *winTexture;
+    SDL_Texture *savedPet;
+
     Game() = default;
     ~Game() = default;
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
     static void AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision);
-    static void addBullet(Entity*, int mouseX, int mouseY);
+    static void addBullet(Entity*, int targetX, int targetY);
     static void CameraSystem();
-    static void changeMap();
+    static void changeMap(float, float);
     static void Dungeon();
     void handleEvents();
     void update();
