@@ -81,64 +81,55 @@ void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& entities) 
 }
 
 bool Collision :: blockVision(const SDL_Rect &enemy, const SDL_Rect &player, std::vector<Entity*>& obstacles) {
-    SDL_Rect losBox;
+    SDL_Rect Box1;
 
     // Create a bounding box that contains both the enemy and player
-    losBox.x = std::min(enemy.x, player.x);
-    losBox.y = std::min(enemy.y, player.y);
-    losBox.w = std::abs(enemy.x - player.x);
-    losBox.h = std::abs(enemy.y - player.y);
+    Box1.x = std::min(enemy.x, player.x);
+    Box1.y = std::min(enemy.y, player.y);
+    Box1.w = std::abs(enemy.x - player.x);
+    Box1.h = std::abs(enemy.y - player.y);
 
     // Check if any obstacle is inside this box
     for (auto& obstacle : obstacles) {
         if (obstacle->hasComponent<ColiderComponent>()) {
-            if (SDL_HasIntersection(&losBox, &obstacle->getComponent<ColiderComponent>().collider)) {
+            if (SDL_HasIntersection(&Box1, &obstacle->getComponent<ColiderComponent>().collider)) {
                 return true; // Vision blocked
             }
         }
     }
     return false; // No obstacles, enemy can see player
 }
+void Collision :: applyKnockback(Entity& a, Entity& b, float force) {
+    auto& transA = a.getComponent<TransformComponent>();
+    auto& transB = b.getComponent<TransformComponent>();
 
-/*void Collision::CheckCollisions(Entity& object, std::vector<Entity*>& tiles) {
-    // Get the object's transform and collider
-    auto& objectTransform = object.getComponent<TransformComponent>();
-    auto& objectCollider = object.getComponent<ColiderComponent>().collider;
+    // Vector from A to B
+    float dx = transB.position.x - transA.position.x;
+    float dy = transB.position.y - transA.position.y;
 
-    // Predict the object's next position
-    float nextX = objectTransform.position.x + objectTransform.velocity.x * objectTransform.speed;
-    float nextY = objectTransform.position.y + objectTransform.velocity.y * objectTransform.speed;
+    float magnitude = std::sqrt(dx * dx + dy * dy);
+    if (magnitude == 0) magnitude = 0.001f; // avoid division by zero
 
-    SDL_Rect nextObjectCollider = objectCollider;
-    nextObjectCollider.x = static_cast<int>(nextX);
-    nextObjectCollider.y = static_cast<int>(nextY);
+    // Normalize direction
+    dx /= magnitude;
+    dy /= magnitude;
 
-    // Check collision with all colliders
-    for (auto& otherColliderComponent : tiles) {
+    // Apply force in opposite directions
+    transA.velocity.x = -dx * force;
+    transA.velocity.y = -dy * force;
 
-        auto& otherCollider = otherColliderComponent->getComponent<ColiderComponent>().collider;
+    transB.velocity.x = dx * force;
+    transB.velocity.y = dy * force;
 
-        // Check if the predicted collider intersects with another collider
-        if (SDL_HasIntersection(&nextObjectCollider, &otherCollider)) {
-            // Separate horizontal and vertical checks
-            SDL_Rect horizontalTest = objectCollider;
-            horizontalTest.x = static_cast<int>(nextX);
+    // Optional flags
+    transA.isKnockbacked = true;
+    transB.isKnockbacked = true;
 
-            SDL_Rect verticalTest = objectCollider;
-            verticalTest.y = static_cast<int>(nextY);
+    // Optional timer setup (if you're using one)
+    transA.knockbackTime = 500;
+    transB.knockbackTime = 500;
+}
 
-            // Resolve horizontal collision
-            if (SDL_HasIntersection(&horizontalTest, &otherCollider)) {
-                objectTransform.velocity.x = 0; // Stop horizontal movement
-            }
-
-            // Resolve vertical collision
-            if (SDL_HasIntersection(&verticalTest, &otherCollider)) {
-                objectTransform.velocity.y = 0; // Stop vertical movement
-            }
-        }
-    }
-}*/
 
 
 

@@ -14,6 +14,8 @@ class TransformComponent : public Component {
       int width = 32;
       int scale = 1;
 
+     bool isKnockbacked = false;
+     int knockbackTime = 0;
 
 
     TransformComponent() {

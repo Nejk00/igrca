@@ -51,8 +51,10 @@ class Keyboard : public Component {
             sprite->play("idle"); // If no movement, set idle animation
         }
 
-        transform->velocity.x = velX;
-        transform->velocity.y = velY;
+        if (!entity->getComponent<TransformComponent>().isKnockbacked) {
+            transform->velocity.x = velX;
+            transform->velocity.y = velY;
+        }
     }
 
 

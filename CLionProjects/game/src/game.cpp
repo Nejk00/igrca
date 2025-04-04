@@ -32,6 +32,7 @@ int Map::sizeY = 60;
 
 std::string  mapFile = "assets/map_tiles.png";
 
+
 auto& player(manager.addEntity());
 auto& enemy(manager.addEntity());
 auto& enemy2(manager.addEntity());
@@ -241,8 +242,6 @@ void Game::handleEvents() {
     if (player.getComponent<PlayerComponent>().ammo_count > 0 && clicked) {
         Game::addBullet(&player, event.button.x, event.button.y);
         player.getComponent<PlayerComponent>().ammo_count--;
-        player.getComponent<HPComponent>().healthPoints--;
-
     }
     if (player.getComponent<PlayerComponent>().ammo_count == max_ammo) {
         ammo_reload = 0;
@@ -265,9 +264,15 @@ void Game :: update() {
     for (auto& e : enemies) {
         if (e->isActive() && e->hasComponent<ColiderComponent>()) {
             if (Collision::blockVision(e->getComponent<ColiderComponent>().collider, player.getComponent<ColiderComponent>().collider, tiles)) {
-                e->getComponent<EnemyComponent>().chase = false;  // Enemy sees player
+                if (e->getComponent<EnemyComponent>().sinceLastSeen == 0) {
+                }
+                e->getComponent<EnemyComponent>().sinceLastSeen += Clock :: delta;
+                e->getComponent<EnemyComponent>().chase = false; // Something is blocking
             } else {
-                e->getComponent<EnemyComponent>().chase = true; // Something is blocking
+                e->getComponent<EnemyComponent>().sinceLastSeen = 0;
+                e->getComponent<EnemyComponent>().lastSeenPosX = player.getComponent<TransformComponent>().position.x + player.getComponent<TransformComponent>().width / 2;
+                e->getComponent<EnemyComponent>().lastSeenPosY = player.getComponent<TransformComponent>().position.y + player.getComponent<TransformComponent>().height / 2;
+                e->getComponent<EnemyComponent>().chase = true; // Enemy sees player
             }
         }
     }
@@ -323,13 +328,37 @@ void Game :: update() {
         }
     }
 
+    for (auto& e : enemies) {
+        if (Collision :: AABB(player.getComponent<ColiderComponent>(), e->getComponent<ColiderComponent>()) && player.getComponent<TransformComponent>().knockbackTime <= 0) {
+            Collision :: applyKnockback(player, *e, 3);
+            player.getComponent<HPComponent>().healthPoints--;
+        }
+    }
+    player.getComponent<TransformComponent>().knockbackTime -= Clock :: delta;
+
+    if (player.getComponent<TransformComponent>().isKnockbacked) {
+        // Simple damping
+        player.getComponent<TransformComponent>().velocity.x *= 0.9f;
+        player.getComponent<TransformComponent>().velocity.y *= 0.9f;
+
+        // Stop if very slow
+        if (std::abs(player.getComponent<TransformComponent>().velocity.x) < 0.1f && std::abs(player.getComponent<TransformComponent>().velocity.y) < 0.1f) {
+            player.getComponent<TransformComponent>().velocity.x = 0;
+            player.getComponent<TransformComponent>().velocity.y = 0;
+            player.getComponent<TransformComponent>().isKnockbacked = false;
+        }
+    }
+
 
     GameLogic::CameraSystem(player);
 
     Collision::CheckCollisions(player, tiles);
-    Collision::CheckCollisions(enemy, tiles);
-    Collision::CheckCollisions(pet1, tiles);
-    Collision::CheckCollisions(pet2, tiles);
+    for (auto& e : enemies) {
+        Collision::CheckCollisions(*e, tiles);
+    }
+    for (auto& p : pets) {
+        Collision::CheckCollisions(*p, tiles);
+    }
 
 }
 

@@ -22,7 +22,7 @@ class Collision {
     static void CheckCollisions(Entity&, Entity&, std::vector<ColiderComponent*>&);
     static void CheckCollisions(Entity&, std::vector<Entity*>&);
     static bool blockVision(const SDL_Rect&, const SDL_Rect&, std::vector<Entity*>&);
-    /*static void CheckCollisions(Entity&, std::vector<Entity*>&);*/
+    static void applyKnockback(Entity&, Entity&, float);
 };
 
 

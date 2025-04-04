@@ -7,7 +7,9 @@
 
 class EnemyComponent : public Component {
 public:
-    bool chase = true;
+    bool chase = false;
+    float lastSeenPosX, lastSeenPosY;
+    int sinceLastSeen = 3000;
     TransformComponent* transform;
     TransformComponent* playerTransform;
     SpriteComponent* sprite;
@@ -31,13 +33,16 @@ public:
         float directionX = playerTransform->position.x - transform->position.x;
         float directionY = playerTransform->position.y - transform->position.y;
 
-        if (!chase) {
+        if (!chase /*&&sinceLastSeen <3000*/) {
+            directionX = lastSeenPosX - transform->position.x;
+            directionY = lastSeenPosY - transform->position.y;
+        }
+
+        if (!chase/* && (transform->position.x == lastSeenPosX && transform->position.y == lastSeenPosY)*/ ) {
             transform->velocity.x = 0;
             transform->velocity.y = 0;
         }
         else{
-            //float directionX = playerTransform->position.x - transform->position.x;
-            //float directionY = playerTransform->position.y - transform->position.y;
 
             float distance = std::sqrt(directionX * directionX + directionY * directionY);
 
@@ -56,7 +61,7 @@ public:
 
         }
         if (type == "enemy") {
-            if (!chase) {
+            if (!chase /*&& (transform->position.x == lastSeenPosX && transform->position.y == lastSeenPosY)*/) {
                 sprite->play("enemy_idle");
             }
             else if (directionX > 0){
@@ -69,7 +74,7 @@ public:
             }
         }
         else if (type == "wolf") {
-            if (!chase) {
+            if (!chase /*&& (transform->position.x == lastSeenPosX && transform->position.y == lastSeenPosY)*/) {
                 sprite->play("wolf_idle");
             }
             else if (directionX > 0) {
