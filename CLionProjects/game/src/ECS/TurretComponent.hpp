@@ -8,48 +8,46 @@ class TurretComponent : public Component {
 public:
     int range = 300;
     bool sight = false;
-    int timeSinceLastBullet = 1e9;
+    int timeSinceLastBullet = 0;
 
-    float posX = 0, posY =0;
+    float posX = 0, posY = 0;
 
     float distanceSquared = 0;
     float dx = 0, dy = 0;
-    TransformComponent* transform;
-    TransformComponent* targetTransform;
-    TransformComponent tmpTransform;
+    TransformComponent* transform = nullptr;
+    TransformComponent* targetTransform = nullptr;
 
-    TurretComponent(Entity* target){
-        targetTransform = &target->getComponent<TransformComponent>();
+    TurretComponent(Entity* target) {
+        if (target) {
+            targetTransform = &target->getComponent<TransformComponent>();
+        }
     }
+
     TurretComponent() = default;
     ~TurretComponent() = default;
-
 
     void init() override {
         transform = &entity->getComponent<TransformComponent>();
     }
 
     void update() override {
-        if (targetTransform) {
-            tmpTransform = *targetTransform;
-        }
-        posX = tmpTransform.position.x;
-        posY = tmpTransform.position.y;
+        if (!transform || !targetTransform) return;
 
-        dx = transform->position.x - tmpTransform.position.x;
-        dy = transform->position.y - tmpTransform.position.y;
+        posX = targetTransform->position.x;
+        posY = targetTransform->position.y;
+
+        dx = transform->position.x - posX;
+        dy = transform->position.y - posY;
         distanceSquared = dx * dx + dy * dy;
 
-        if (distanceSquared < range * range)
-            sight = true;
-        else
-            sight = false;
+        sight = distanceSquared < range * range;
 
-        if (timeSinceLastBullet > 150 && sight) {
-            Game::addBullet(entity, (int)posX, (int)posY);
+        /*if (timeSinceLastBullet > 150 && sight) {
+            Game::addBullet(entity, 100, 100);
             timeSinceLastBullet = 0;
-        }
-        timeSinceLastBullet += Clock :: delta;
+        }*/
+
+        timeSinceLastBullet += Clock::delta;
     }
 };
 

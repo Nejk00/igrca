@@ -8,10 +8,23 @@
 #include<ctime>
 #include "ECS/Components.hpp"
 #include"Clock.hpp"
+#include "ECS/buttonComponent.hpp"
 #include "ECS/TurretComponent.hpp"
-const int Game :: SCREEN_WIDTH = 640;
-const int Game :: SCREEN_HEIGHT = 640;
 
+enum class GameState {
+    MAIN_MENU,
+    PLAYING,
+    PAUSED,
+    OPTIONS,
+    GAME_OVER
+};
+
+    GameState currentState = GameState::MAIN_MENU;
+
+int Game :: SCREEN_WIDTH = 640;
+int Game :: SCREEN_HEIGHT = 640;
+
+bool Game :: clicked = false;
 bool Game :: inDungeon = false;
 int Game :: all_pets = -1;
 
@@ -32,7 +45,7 @@ int Map::sizeY = 60;
 
 std::string  mapFile = "assets/map_tiles.png";
 
-
+auto& play_button(manager.addEntity());
 auto& player(manager.addEntity());
 auto& enemy(manager.addEntity());
 auto& enemy2(manager.addEntity());
@@ -55,7 +68,11 @@ auto& projectiles(manager.getGroup(groupProjectile));
 auto& turrets = manager.getGroup(groupTurrets);
 
 
-void Game :: init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen) {
+void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
+    if (fullscreen) {
+        SCREEN_WIDTH = 1920;
+        SCREEN_HEIGHT = 1080;
+    }
     srand(time(NULL));
     int flags = 0;
     if (fullscreen) {
@@ -84,10 +101,12 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
         game_overTexture = Texture::LoadTexture("assets/game_over.png");
         winTexture = Texture::LoadTexture("assets/win.png");
         savedPet = Texture::LoadTexture("assets/pet.png");
+        button_play = Texture::LoadTexture("assets/play_button.png");
+        mainmenuscreen = Texture::LoadTexture("assets/mainmenu.png");
 
         Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
-        lab.addComponent<TransformComponent>(800, 450, 16, 16, 2);
+        lab.addComponent<TransformComponent>(rand()%500+1000, rand()%500+1000, 16, 16, 2);
         lab.addComponent<SpriteComponent>("assets/lojtra.png");
         lab.addComponent<ColiderComponent>("lab");
         lab.addGroup(groupMap);
@@ -99,6 +118,7 @@ void Game :: init(const char* title, int xpos, int ypos, int width, int height, 
         player.addComponent<HPComponent>(3);
         player.addComponent<PlayerComponent>();
         player.addGroup(groupPlayers);
+
 }
 
 void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
@@ -110,9 +130,9 @@ void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
         tile.addComponent<ColiderComponent>("tile_" + std::to_string(xpos) + "_" + std::to_string(ypos));
     }
 }
-void Game :: addBullet(Entity* object, int targetX, int targetY) {
-    int x = object->getComponent<TransformComponent>().position.x + object->getComponent<TransformComponent>().width/2;
-    int y = object->getComponent<TransformComponent>().position.y + object->getComponent<TransformComponent>().height/2;
+void Game :: addBullet(Entity* object, float targetX, float targetY) {
+    float x = object->getComponent<TransformComponent>().position.x + object->getComponent<TransformComponent>().width/2;
+    float y = object->getComponent<TransformComponent>().position.y + object->getComponent<TransformComponent>().height/2;
 
     auto& bullet(manager.addEntity());
 
@@ -215,9 +235,9 @@ void Game :: changeMap(float prevX, float prevY) {
 
 }
 void Game::handleEvents() {
-    bool clicked = false;
     static int max_ammo = 5;
     static int ammo_reload = 0;
+    bool mainMenuinitialized = false;
 
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -227,7 +247,21 @@ void Game::handleEvents() {
         default:
             break;
     }
-    if (inDungeon) {
+    switch (currentState) {
+        case GameState::MAIN_MENU:
+            if (!mainMenuinitialized) {
+                initMainMenu();
+                mainMenuinitialized = true;
+            }
+            updateMainMenu();
+            renderMainMenu();
+        break;
+        case GameState::PLAYING:
+            update();
+            render();
+        break;
+    }
+
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
                 clicked = true;
@@ -238,10 +272,11 @@ void Game::handleEvents() {
                 clicked = false;
             }
         }
-    }
-    if (player.getComponent<PlayerComponent>().ammo_count > 0 && clicked) {
-        Game::addBullet(&player, event.button.x, event.button.y);
+
+    if (player.getComponent<PlayerComponent>().ammo_count > 0 && clicked && inDungeon) {
+        Game::addBullet(&player, (float)event.button.x, (float)event.button.y);
         player.getComponent<PlayerComponent>().ammo_count--;
+        clicked = false;
     }
     if (player.getComponent<PlayerComponent>().ammo_count == max_ammo) {
         ammo_reload = 0;
@@ -256,6 +291,7 @@ void Game::handleEvents() {
 void Game :: update() {
     manager.refresh();
     manager.update();
+
 
     if (pets.size() > 0) {
         all_pets = pets.size();
@@ -282,7 +318,10 @@ void Game :: update() {
         Collision::CheckCollisions(*pet, pets);
         if (Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>()) && (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F)) {
             pet->getComponent<PetComponent>().follow = !pet->getComponent<PetComponent>().follow;
-            player.getComponent<PlayerComponent>().animals_saved++;
+            if (!pet->getComponent<PetComponent>().saved) {
+                pet->getComponent<PetComponent>().saved = true;
+                player.getComponent<PlayerComponent>().animals_saved++;
+            }
         }
         if(Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>())) {
             pet->getComponent<TransformComponent>().velocity.x = 0;
@@ -349,7 +388,6 @@ void Game :: update() {
         }
     }
 
-
     GameLogic::CameraSystem(player);
 
     Collision::CheckCollisions(player, tiles);
@@ -361,6 +399,38 @@ void Game :: update() {
     }
 
 }
+void Game::initMainMenu() {
+    play_button.addComponent<buttonComponent>(220, 300, 574, 268, "assets/play_button");
+}
+
+void Game::updateMainMenu() {
+    SDL_SetTextureAlphaMod(button_play, 255);
+
+    SDL_Rect mouse {0, 0, 1, 1};
+    SDL_GetMouseState(&mouse.x, &mouse.y);
+    if (Collision::AABB(play_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureAlphaMod(button_play, 100);
+        if (clicked)
+        currentState = GameState::PLAYING;
+    }
+}
+void Game::renderMainMenu() {
+
+    SDL_RenderClear(renderer);
+
+    SDL_Rect srcRect = { 0, 0, 1920, 1280 };
+    SDL_Rect destRect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+    SDL_SetTextureAlphaMod(mainmenuscreen, 100);
+    Texture::Draw(mainmenuscreen, srcRect, destRect, SDL_FLIP_NONE);
+
+
+    srcRect = play_button.getComponent<buttonComponent>().srcRect;
+    destRect = play_button.getComponent<buttonComponent>().destRect;
+    Texture::Draw(button_play, srcRect, destRect, SDL_FLIP_NONE);
+
+    SDL_RenderPresent(renderer);
+}
+
 
 
 void Game :: render() {

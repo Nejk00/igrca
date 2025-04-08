@@ -6,7 +6,8 @@
 
 
 class BulletComponent : public Component {
-    int xpos, ypos;
+    float xpos, ypos;
+    float speed = 10;
     TransformComponent* transform;
     SpriteComponent* sprite;
     public:
@@ -31,11 +32,11 @@ class BulletComponent : public Component {
 
             // Scale the speed (adjust speed as needed)
             float bulletSpeed = 10;
-            bulletVelX *= bulletSpeed;
-            bulletVelY *= bulletSpeed;
+            bulletVelX *= speed;
+            bulletVelY *= speed;
 
-            entity->getComponent<TransformComponent>().velocity.x += bulletVelX;
-            entity->getComponent<TransformComponent>().velocity.y += bulletVelY;
+            transform->velocity.x += bulletVelX;
+            transform->velocity.y += bulletVelY;
 
         }
     void update() override {

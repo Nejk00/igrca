@@ -31,6 +31,7 @@ add_executable(game src/main.cpp
         src/ECS/TurretComponent.hpp
         src/ECS/HPComponent.hpp
         src/ECS/PlayerComponent.hpp
+        src/ECS/buttonComponent.hpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} )

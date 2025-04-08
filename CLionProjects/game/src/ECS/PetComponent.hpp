@@ -14,6 +14,7 @@ public:
     Entity* target;
 
     bool follow = false;
+    bool saved = false;
 
     PetComponent(Entity* target) {
         playerTransform = &target->getComponent<TransformComponent>();
