@@ -37,6 +37,8 @@ public:
     SDL_Texture *savedPet;
     SDL_Texture *button_play;
     SDL_Texture *mainmenuscreen;
+    SDL_Texture *button_exit;
+    SDL_Texture *button_options;
 
     Game() = default;
     ~Game() = default;
@@ -52,6 +54,10 @@ public:
     void initMainMenu();
     void updateMainMenu();
     void renderMainMenu();
+
+    void initOptions();
+    void renderOptions();
+    void updateOptions();
 
     void run();
     void update();

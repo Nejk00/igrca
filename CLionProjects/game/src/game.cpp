@@ -45,7 +45,12 @@ int Map::sizeY = 60;
 
 std::string  mapFile = "assets/map_tiles.png";
 
+auto& resize_small_button(manager.addEntity());
+auto& resize_medium_button(manager.addEntity());
+auto& resize_large_button(manager.addEntity());
 auto& play_button(manager.addEntity());
+auto& quit_button(manager.addEntity());
+auto& options_button(manager.addEntity());
 auto& player(manager.addEntity());
 auto& enemy(manager.addEntity());
 auto& enemy2(manager.addEntity());
@@ -103,6 +108,8 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
         savedPet = Texture::LoadTexture("assets/pet.png");
         button_play = Texture::LoadTexture("assets/play_button.png");
         mainmenuscreen = Texture::LoadTexture("assets/mainmenu.png");
+        button_exit = Texture::LoadTexture("assets/exit_button.png");
+        button_options = Texture::LoadTexture("assets/options_button.png");
 
         Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
@@ -238,6 +245,7 @@ void Game::handleEvents() {
     static int max_ammo = 5;
     static int ammo_reload = 0;
     bool mainMenuinitialized = false;
+    bool optionsInitialized = false;
 
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -260,6 +268,16 @@ void Game::handleEvents() {
             update();
             render();
         break;
+        case GameState::OPTIONS:
+           if (!optionsInitialized) {
+               initOptions();
+           }
+           updateOptions();
+           renderOptions();
+            break;
+    }
+    if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+        currentState = GameState::MAIN_MENU;
     }
 
         if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -401,10 +419,13 @@ void Game :: update() {
 }
 void Game::initMainMenu() {
     play_button.addComponent<buttonComponent>(220, 300, 574, 268, "assets/play_button");
+    quit_button.addComponent<buttonComponent>(220, 400, 1024, 1024, "assets/exit_button");
+    options_button.addComponent<buttonComponent>(220, 500, 1024, 1024, "assets/options_button");
 }
 
 void Game::updateMainMenu() {
     SDL_SetTextureAlphaMod(button_play, 255);
+    SDL_SetTextureAlphaMod(button_exit, 100);
 
     SDL_Rect mouse {0, 0, 1, 1};
     SDL_GetMouseState(&mouse.x, &mouse.y);
@@ -413,19 +434,94 @@ void Game::updateMainMenu() {
         if (clicked)
         currentState = GameState::PLAYING;
     }
+    else if (Collision::AABB(quit_button.getComponent<buttonComponent>().destRect, mouse)) {
+        //SDL_SetTextureAlphaMod(exitbutton, 50);
+        if (clicked)
+            isRunning = false;
+
+    }
+    else if (Collision::AABB(options_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureAlphaMod(button_options, 100);
+        if (clicked)
+            currentState = GameState::OPTIONS;
+    }
 }
 void Game::renderMainMenu() {
-
     SDL_RenderClear(renderer);
 
     SDL_Rect srcRect = { 0, 0, 1920, 1280 };
     SDL_Rect destRect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
     SDL_SetTextureAlphaMod(mainmenuscreen, 100);
+
     Texture::Draw(mainmenuscreen, srcRect, destRect, SDL_FLIP_NONE);
 
 
     srcRect = play_button.getComponent<buttonComponent>().srcRect;
     destRect = play_button.getComponent<buttonComponent>().destRect;
+    Texture::Draw(button_play, srcRect, destRect, SDL_FLIP_NONE);
+
+    srcRect = quit_button.getComponent<buttonComponent>().srcRect;
+    destRect = quit_button.getComponent<buttonComponent>().destRect;
+    Texture::Draw(button_exit, srcRect, destRect, SDL_FLIP_NONE);
+
+    srcRect = options_button.getComponent<buttonComponent>().srcRect;
+    destRect = options_button.getComponent<buttonComponent>().destRect;
+    Texture::Draw(button_options, srcRect, destRect, SDL_FLIP_NONE);
+
+    SDL_RenderPresent(renderer);
+}
+
+void Game::initOptions() {
+    resize_small_button.addComponent<buttonComponent>(220, 300, 574, 268, "assets/play_button");
+    resize_medium_button.addComponent<buttonComponent>(220, 400, 1024, 1024, "assets/play_button");
+    resize_large_button.addComponent<buttonComponent>(220, 500, 1024, 1024, "assets/play_button");
+}
+void Game::updateOptions() {
+    SDL_Rect mouse {0, 0, 1, 1};
+    SDL_GetMouseState(&mouse.x, &mouse.y);
+    SDL_SetTextureAlphaMod(button_play, 255);
+
+    if (Collision::AABB(resize_small_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureAlphaMod(button_play, 100);
+        if (clicked) {
+            SCREEN_WIDTH = 1080;
+            SCREEN_HEIGHT = 720;
+            SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+        }
+    }
+    else if (Collision::AABB(resize_medium_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureAlphaMod(button_play, 100);
+        if (clicked) {
+            SCREEN_WIDTH = 1440;
+            SCREEN_HEIGHT = 960;
+            SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+        }
+    }
+    else if (Collision::AABB(resize_large_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureAlphaMod(button_play, 100);
+        if (clicked) {
+            SCREEN_WIDTH = 1920;
+            SCREEN_HEIGHT = 1080;
+            SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+        }
+    }
+}
+void Game::renderOptions() {
+    SDL_RenderClear(renderer);
+
+    SDL_Rect srcRect = { 0, 0, 1920, 1280 };
+    SDL_Rect destRect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+
+    srcRect = resize_small_button.getComponent<buttonComponent>().srcRect;
+    destRect = resize_small_button.getComponent<buttonComponent>().destRect;
+    Texture::Draw(button_play, srcRect, destRect, SDL_FLIP_NONE);
+
+    srcRect = resize_medium_button.getComponent<buttonComponent>().srcRect;
+    destRect = resize_medium_button.getComponent<buttonComponent>().destRect;
+    Texture::Draw(button_play, srcRect, destRect, SDL_FLIP_NONE);
+
+    srcRect = resize_large_button.getComponent<buttonComponent>().srcRect;
+    destRect = resize_large_button.getComponent<buttonComponent>().destRect;
     Texture::Draw(button_play, srcRect, destRect, SDL_FLIP_NONE);
 
     SDL_RenderPresent(renderer);
