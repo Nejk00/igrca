@@ -18,7 +18,10 @@ class Game {
     SDL_Window *window;
 
 public:
+    static float scaleX, scaleY;
     bool isRunning;
+    static bool level1Cleared;
+    static bool level2Cleared;
     static bool clicked;
     static bool inDungeon;
     static SDL_Rect camera;
@@ -29,16 +32,26 @@ public:
     static int SCREEN_WIDTH;
     static int all_pets;
 
+
+
+
     SDL_Texture *bulletTexture;
     SDL_Texture *hpTexture;
-    SDL_Texture *missingHpTexture;
+    SDL_Texture *savedPet;
+
     SDL_Texture *game_overTexture;
     SDL_Texture *winTexture;
-    SDL_Texture *savedPet;
-    SDL_Texture *button_play;
     SDL_Texture *mainmenuscreen;
-    SDL_Texture *button_exit;
+    SDL_Texture *pauseMenu;
+
     SDL_Texture *button_options;
+    SDL_Texture *button_exit;
+    SDL_Texture *button_play;
+    SDL_Texture *button_small;
+    SDL_Texture *button_large;
+    SDL_Texture *button_medium;
+    SDL_Texture *button_resume;
+    SDL_Texture *button_main_menu;
 
     Game() = default;
     ~Game() = default;
@@ -48,6 +61,8 @@ public:
     static void addBullet(Entity*, float targetX, float targetY);
     static void CameraSystem();
     static void changeMap(float, float);
+    static void loadDungeon();
+    static void backToIsland( float, float);
     static void Dungeon();
     void handleEvents();
 
@@ -58,6 +73,10 @@ public:
     void initOptions();
     void renderOptions();
     void updateOptions();
+
+    void initPause();
+    void renderPause();
+    void updatePause();
 
     void run();
     void update();

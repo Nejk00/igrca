@@ -11,6 +11,7 @@ class TileComponent : public Component {
     SDL_Texture* texture;
     SDL_Rect srcRect, destRect;
     Vector2D position;
+    TransformComponent* transform;
 
 
     TileComponent()= default;
@@ -33,9 +34,14 @@ class TileComponent : public Component {
         destRect.y = ypos;
         destRect.w = destRect.h = 32;
     }
+    void init() override {
+        transform = &entity->getComponent<TransformComponent>();
+    }
     void update() override {
         destRect.x = position.x - Game :: camera.x;
         destRect.y = position.y - Game :: camera.y;
+        //destRect.w = transform->width * Game::scaleX;
+        //destRect.h = transform->height * Game::scaleY;
     }
     void draw() override {
         Texture::Draw(texture, srcRect, destRect, SDL_FLIP_NONE);

@@ -32,8 +32,8 @@ class ColiderComponent : public Component {
     void update() override {
         collider.x = static_cast<int>(transform->position.x);
         collider.y = static_cast<int>(transform->position.y);
-        collider.w = transform->width * transform->scale;
-        collider.h = transform->height * transform->scale;
+        collider.w = transform->width * transform->scale/* * Game::scaleX*/;
+        collider.h = transform->height * transform->scale /** Game::scaleY*/;
     }
     void draw() override {
         SDL_Rect tmp;
@@ -48,4 +48,4 @@ class ColiderComponent : public Component {
     bool operator==(const ColiderComponent &) const{ return ColiderComponent::tag == ColiderComponent::tag; }
 };
 
-#endif //COLIDERCOMPONENT_HPP
+#endif //COLIDERCOMPONENT_HPP+-

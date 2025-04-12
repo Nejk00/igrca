@@ -6,7 +6,8 @@
 
 class buttonComponent : public Component {
     public:
-    SDL_Rect srcRect, destRect {0, 0, 150, 70};
+    int spacing = 100 * Game::SCREEN_HEIGHT / 720;
+    SDL_Rect srcRect, destRect {0, 0, 150 * Game::SCREEN_WIDTH / 1080, 80 * Game::SCREEN_HEIGHT / 720};
     SDL_Texture* texture;
 
     buttonComponent(int xpos, int ypos, int width, int height, const char* path) {
