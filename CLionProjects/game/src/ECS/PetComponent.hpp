@@ -28,6 +28,9 @@ public:
     }
 
     void update() override {
+        /*if (saved && entity->isActive()) {
+            entity->deactivate();
+        }*/
             float directionX = playerTransform->position.x - transform->position.x;
             float directionY = playerTransform->position.y - transform->position.y;
 

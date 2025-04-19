@@ -43,6 +43,7 @@ public:
     SDL_Texture *winTexture;
     SDL_Texture *mainmenuscreen;
     SDL_Texture *pauseMenu;
+    SDL_Texture *options;
 
     SDL_Texture *button_options;
     SDL_Texture *button_exit;
@@ -52,6 +53,9 @@ public:
     SDL_Texture *button_medium;
     SDL_Texture *button_resume;
     SDL_Texture *button_main_menu;
+    SDL_Texture *button_back_to_menu;
+    SDL_Texture *button_save_game;
+    SDL_Texture *button_load_game;
 
     Game() = default;
     ~Game() = default;
@@ -65,6 +69,10 @@ public:
     static void backToIsland( float, float);
     static void Dungeon();
     void handleEvents();
+    void centerWindow(SDL_Window*);
+
+    void saveGame();
+    void loadGame();
 
     void initMainMenu();
     void updateMainMenu();
