@@ -47,7 +47,7 @@ public:
             targetVelocity.y = directionY * transform->speed;
 
 
-            if (follow){
+            if (saved){
                 transform->velocity.x += (targetVelocity.x - transform->velocity.x) * lerpFactor;
                 transform->velocity.y += (targetVelocity.y - transform->velocity.y) * lerpFactor;
             }
@@ -55,7 +55,7 @@ public:
                 transform->velocity.x = 0;
                 transform->velocity.y = 0;
             }
-            if (follow == false) {
+            if (saved == false) {
                 sprite->play("pet_idle");
             }
             else if (directionX > 0){

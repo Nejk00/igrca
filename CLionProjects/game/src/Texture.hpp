@@ -11,6 +11,7 @@ public:
 
     static SDL_Texture* LoadTexture(const char* filename);
     static void Draw(SDL_Texture* tex, SDL_Rect src, SDL_Rect dest, SDL_RendererFlip flip);
-    //static void Draw(SDL_Texture* tex, SDL_Rect src, SDL_Rect dest);// ta str
+    static void RenderNumber(int number, int x, int y, float scale);
+    static void RenderText(const std::string& text, int x, int y, float scale);
 };
 #endif //TEXTURE_HPP

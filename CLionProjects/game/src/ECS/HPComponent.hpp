@@ -1,7 +1,7 @@
 
 #ifndef HPCOMPONENT_HPP
 #define HPCOMPONENT_HPP
-
+#include "PlayerComponent.hpp"
 
 
 class HPComponent : public Component {
@@ -17,7 +17,12 @@ public:
     }
     void update() override {
         if (healthPoints <= 0) {
-            entity->deactivate();
+            if (entity->hasComponent<PlayerComponent>()) {
+                Game::game_over = true;
+            }
+            else{
+                entity->deactivate();
+            }
         }
     }
 };

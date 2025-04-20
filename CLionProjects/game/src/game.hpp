@@ -8,6 +8,7 @@
 #include<SDL_image.h>
 #include<vector>
 #include"ECS/ECS.hpp"
+#include<fstream>
 #include"Clock.hpp"
 
 
@@ -18,8 +19,13 @@ class Game {
     SDL_Window *window;
 
 public:
+    std::string username;
+    std::ifstream replayFile;
+    static int score;
     static float scaleX, scaleY;
     bool isRunning;
+    static bool game_over;
+    static float prevX, prevY;
     static bool level1Cleared;
     static bool level2Cleared;
     static bool clicked;
@@ -31,6 +37,7 @@ public:
     static int SCREEN_HEIGHT;
     static int SCREEN_WIDTH;
     static int all_pets;
+    static int LETTER_WIDTH, LETTER_HEIGHT;
 
 
 
@@ -56,6 +63,10 @@ public:
     SDL_Texture *button_back_to_menu;
     SDL_Texture *button_save_game;
     SDL_Texture *button_load_game;
+    SDL_Texture *button_replay;
+
+    static SDL_Texture *numbersTexture;
+    static SDL_Texture *lettersTexture;
 
     Game() = default;
     ~Game() = default;
@@ -70,9 +81,16 @@ public:
     static void Dungeon();
     void handleEvents();
     void centerWindow(SDL_Window*);
+    void RenderNumber(int number, int x, int y, float scale);
 
     void saveGame();
     void loadGame();
+    void highscore(std::string username, int score);
+
+    void initReplay();
+    void replay();
+    void renderReplay();
+
 
     void initMainMenu();
     void updateMainMenu();
@@ -86,10 +104,19 @@ public:
     void renderPause();
     void updatePause();
 
+    void initGameOver();
+    void updateGameOver();
+    void renderGameOver();
+
+    void initUserInput();
+    void updateUserInput();
+    void renderUserInput();
+
     void run();
     void update();
     void render();
     void clean();
+    void resetGame();
 
     bool running(){
         return isRunning;

@@ -13,16 +13,24 @@
 #include "ECS/Components.hpp"
 #include"Clock.hpp"
 #include "ECS/buttonComponent.hpp"
-#include "ECS/TurretComponent.hpp"
-
+#include"ECS/TurretComponent.hpp"
+struct users {
+    std::string name;
+    int score;
+};
+struct replayGame {
+    float velocityX, velocityY;
+};
 
 struct saveGame {
-    float playerX, playerY;
+    float playerX, playerY, prevX, prevY;
     int playerHealth, playerAmmo, animalsSaved;
     bool inDungeon, level1cleared;
 };
 
 enum class GameState {
+    USER_INPUT,
+    REPLAY,
     MAIN_MENU,
     PLAYING,
     PAUSED,
@@ -32,18 +40,25 @@ enum class GameState {
 
 GameState currentState = GameState::MAIN_MENU;
 
+bool Game::game_over = false;
+float Game:: prevX = 0, Game:: prevY = 0;
+
 bool Game :: level1Cleared = false;
 bool Game :: level2Cleared = false;
+int Game :: score = 0;
+float Game :: scaleX = 1, Game::scaleY = 1;
 
 int Game :: SCREEN_WIDTH = 1080;
 int Game :: SCREEN_HEIGHT = 720;
-
-float Game :: scaleX = 1;
-float Game :: scaleY = 1;
+int Game :: LETTER_WIDTH = 16;
+int Game :: LETTER_HEIGHT = 16;
 
 bool Game :: clicked = false;
 bool Game :: inDungeon = false;
 int Game :: all_pets = -1;
+
+SDL_Texture* Game::numbersTexture = Texture::LoadTexture("assets/numbers.png");
+SDL_Texture* Game::lettersTexture = Texture::LoadTexture("assets/letters.png");
 
 SDL_Renderer* Game :: renderer = nullptr;
 SDL_Event Game :: event;
@@ -63,6 +78,8 @@ int Map::sizeY = 60;
 
 std::string  mapFile = "assets/map_tiles.png";
 
+auto& restart_button(manager.addEntity());
+auto&replay_button(manager.addEntity());
 auto& load_button(manager.addEntity());
 auto& save_button(manager.addEntity());
 auto& resume_button(manager.addEntity());
@@ -132,6 +149,9 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
     else {
         isRunning = false;
     }
+        std::ofstream replay("replay.bin", std::ios::binary);
+        replay.close();
+
         bulletTexture = Texture::LoadTexture("assets/player_bullet.png");
         hpTexture = Texture::LoadTexture("assets/heart.png");
         game_overTexture = Texture::LoadTexture("assets/game_over.png");
@@ -150,6 +170,9 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
         options = Texture::LoadTexture("assets/background_options.png");
         button_save_game = Texture::LoadTexture("assets/save_game_button.png");
         button_load_game = Texture::LoadTexture("assets/load_game_button.png");
+        button_replay = Texture::LoadTexture("assets/replay_button.png");
+        numbersTexture = Texture::LoadTexture("assets/numbers.png");
+        lettersTexture = Texture::LoadTexture("assets/letters.png");
 
         Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
@@ -199,7 +222,11 @@ void Game :: addBullet(Entity* object, float targetX, float targetY) {
 
 void Game::loadDungeon() {
     tiles.clear();
+    pets.clear();
+    enemies.clear();
     mapFile = "assets/lab_tiles.png";
+    bool initialized = false;
+
     if (!level1Cleared) {
         Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
 
@@ -280,6 +307,8 @@ void Game::loadDungeon() {
         turret.addComponent<ColiderComponent>("turret");
         turret.addComponent<TurretComponent>(&player);
         turret.addGroup(groupTurrets);
+
+        initialized = true;
     }
     else {
         Map::LoadMap("assets/level2.txt", Map::sizeX, Map::sizeY);
@@ -291,109 +320,130 @@ void Game::loadDungeon() {
         lab.getComponent<TransformComponent>().position.y = 930;
         lab.addGroup(groupMap);
 
+        if (!initialized) {
+            enemy.addComponent<TransformComponent>(450, 600, 30, 22, 2, 1);
+            enemy.addComponent<SpriteComponent>("assets/enemy.png", true);
+            enemy.addComponent<ColiderComponent>("enemy");
+            enemy.addComponent<EnemyComponent>(&player, "enemy");
+            enemy.addComponent<HPComponent>(3);
+            enemy.addGroup(groupEnemies);
 
-        enemy6.addComponent<TransformComponent>(1100, 140, 30, 22, 2, 1);
-        enemy6.addComponent<SpriteComponent>("assets/enemy.png", true);
-        enemy6.addComponent<ColiderComponent>("enemy");
-        enemy6.addComponent<EnemyComponent>(&player, "enemy");
-        enemy6.addComponent<HPComponent>(3);
-        enemy6.addGroup(groupEnemies);
+            enemy2.addComponent<TransformComponent>(1500, 300, 41, 62, 1, 1);
+            enemy2.addComponent<SpriteComponent>("assets/wolf.png", true);
+            enemy2.addComponent<ColiderComponent>("wolf");
+            enemy2.addComponent<EnemyComponent>(&player, "wolf");
+            enemy2.addComponent<HPComponent>(3);
+            enemy2.addGroup(groupEnemies);
 
+            enemy3.addComponent<TransformComponent>(220, 1400, 30, 22, 2, 1);
+            enemy3.addComponent<SpriteComponent>("assets/enemy.png", true);
+            enemy3.addComponent<ColiderComponent>("enemy");
+            enemy3.addComponent<EnemyComponent>(&player, "enemy");
+            enemy3.addComponent<HPComponent>(3);
+            enemy3.addGroup(groupEnemies);
 
-        enemy7.addComponent<TransformComponent>(220, 470, 41, 62, 1, 1);
-        enemy7.addComponent<SpriteComponent>("assets/wolf.png", true);
-        enemy7.addComponent<ColiderComponent>("wolf");
-        enemy7.addComponent<EnemyComponent>(&player, "wolf");
-        enemy7.addComponent<HPComponent>(3);
-        enemy7.addGroup(groupEnemies);
+            enemy4.addComponent<TransformComponent>(1540, 860, 41, 62, 1, 1);
+            enemy4.addComponent<SpriteComponent>("assets/wolf.png", true);
+            enemy4.addComponent<ColiderComponent>("wolf");
+            enemy4.addComponent<EnemyComponent>(&player, "wolf");
+            enemy4.addComponent<HPComponent>(3);
+            enemy4.addGroup(groupEnemies);
 
+            enemy5.addComponent<TransformComponent>(840, 1500, 30, 22, 2, 1);
+            enemy5.addComponent<SpriteComponent>("assets/enemy.png", true);
+            enemy5.addComponent<ColiderComponent>("enemy");
+            enemy5.addComponent<EnemyComponent>(&player, "enemy");
+            enemy5.addComponent<HPComponent>(3);
+            enemy5.addGroup(groupEnemies);
 
-        enemy8.addComponent<TransformComponent>(1750, 370, 30, 22, 2, 1);
-        enemy8.addComponent<SpriteComponent>("assets/enemy.png", true);
-        enemy8.addComponent<ColiderComponent>("enemy");
-        enemy8.addComponent<EnemyComponent>(&player, "enemy");
-        enemy8.addComponent<HPComponent>(3);
-        enemy8.addGroup(groupEnemies);
+            pet1.addComponent<TransformComponent>(380, 600, 32, 32, 1, 2);
+            pet1.addComponent<SpriteComponent>("assets/pet.png", true);
+            pet1.addComponent<ColiderComponent>("pet");
+            pet1.addComponent<PetComponent>(&player);
+            pet1.addGroup(groupPet);
 
+            pet2.addComponent<TransformComponent>(1500, 260, 32, 32, 1, 2);
+            pet2.addComponent<SpriteComponent>("assets/pet2.png", true);
+            pet2.addComponent<ColiderComponent>("pet");
+            pet2.addComponent<PetComponent>(&player);
+            pet2.addGroup(groupPet);
 
-        enemy9.addComponent<TransformComponent>(320, 1650, 41, 62, 1, 1);
-        enemy9.addComponent<SpriteComponent>("assets/wolf.png", true);
-        enemy9.addComponent<ColiderComponent>("wolf");
-        enemy9.addComponent<EnemyComponent>(&player, "wolf");
-        enemy9.addComponent<HPComponent>(3);
-        enemy9.addGroup(groupEnemies);
+            pet3.addComponent<TransformComponent>(950, 1510, 32, 32, 1, 2);
+            pet3.addComponent<SpriteComponent>("assets/pet2.png", true);
+            pet3.addComponent<ColiderComponent>("pet");
+            pet3.addComponent<PetComponent>(&player);
+            pet3.addGroup(groupPet);
 
+            pet4.addComponent<TransformComponent>(1550, 820, 32, 32, 1, 2);
+            pet4.addComponent<SpriteComponent>("assets/pet.png", true);
+            pet4.addComponent<ColiderComponent>("pet");
+            pet4.addComponent<PetComponent>(&player);
+            pet4.addGroup(groupPet);
 
-        enemy10.addComponent<TransformComponent>(1580, 1700, 30, 22, 2, 1);
-        enemy10.addComponent<SpriteComponent>("assets/enemy.png", true);
-        enemy10.addComponent<ColiderComponent>("enemy");
-        enemy10.addComponent<EnemyComponent>(&player, "enemy");
-        enemy10.addComponent<HPComponent>(3);
-        enemy10.addGroup(groupEnemies);
-
+            pet5.addComponent<TransformComponent>(270, 1420, 32, 32, 1, 2);
+            pet5.addComponent<SpriteComponent>("assets/pet.png", true);
+            pet5.addComponent<ColiderComponent>("pet");
+            pet5.addComponent<PetComponent>(&player);
+            pet5.addGroup(groupPet);
+        }
         pet1.getComponent<TransformComponent>().position.x = 250;
-        pet1.getComponent<TransformComponent>().position.y = 550;
-        pet1.getComponent<PetComponent>().saved = false;
-        pet1.addGroup(groupPet);
+            pet1.getComponent<TransformComponent>().position.y = 550;
+            pet1.getComponent<PetComponent>().saved = false;
+            pet1.addGroup(groupPet);
 
 
-        pet2.getComponent<TransformComponent>().position.x = 1060;
-        pet2.getComponent<TransformComponent>().position.y = 175;
-        pet2.getComponent<PetComponent>().saved = false;
-        pet2.addGroup(groupPet);
+            pet2.getComponent<TransformComponent>().position.x = 1060;
+            pet2.getComponent<TransformComponent>().position.y = 175;
+            pet2.getComponent<PetComponent>().saved = false;
+            pet2.addGroup(groupPet);
 
 
-        pet3.getComponent<TransformComponent>().position.x = 165;
-        pet3.getComponent<TransformComponent>().position.y = 1670;
-        pet3.getComponent<PetComponent>().saved = false;
-        pet3.addGroup(groupPet);
+            pet3.getComponent<TransformComponent>().position.x = 165;
+            pet3.getComponent<TransformComponent>().position.y = 1670;
+            pet3.getComponent<PetComponent>().saved = false;
+            pet3.addGroup(groupPet);
 
 
-        pet4.getComponent<TransformComponent>().position.x = 1600;
-        pet4.getComponent<TransformComponent>().position.y = 1700;
-        pet4.getComponent<PetComponent>().saved = false;
-        pet4.addGroup(groupPet);
+            pet4.getComponent<TransformComponent>().position.x = 1600;
+            pet4.getComponent<TransformComponent>().position.y = 1700;
+            pet4.getComponent<PetComponent>().saved = false;
+            pet4.addGroup(groupPet);
 
 
-        pet5.getComponent<TransformComponent>().position.x = 1800;
-        pet5.getComponent<TransformComponent>().position.y = 350;
-        pet5.getComponent<PetComponent>().saved = false;
-        pet5.addGroup(groupPet);
+            pet5.getComponent<TransformComponent>().position.x = 1800;
+            pet5.getComponent<TransformComponent>().position.y = 350;
+            pet5.getComponent<PetComponent>().saved = false;
+            pet5.addGroup(groupPet);
 
+            enemy.reactivate();
+            enemy.getComponent<TransformComponent>().position.x = 1100;
+            enemy.getComponent<TransformComponent>().position.y = 140;
+            enemy.getComponent<HPComponent>().healthPoints = 3;
+            enemy.addGroup(groupEnemies);
 
-        /*enemy.getComponent<TransformComponent>().position.x = 1100;
-        enemy.getComponent<TransformComponent>().position.y = 140;
-        enemy.getComponent<HPComponent>().healthPoints = 3;
-        enemy.reactivate();
-        enemy.addGroup(groupEnemies);
+            enemy2.reactivate();
+            enemy2.getComponent<TransformComponent>().position.x = 220;
+            enemy2.getComponent<TransformComponent>().position.y = 470;
+            enemy2.getComponent<HPComponent>().healthPoints = 3;
+            enemy2.addGroup(groupEnemies);
 
+            enemy3.reactivate();
+            enemy3.getComponent<TransformComponent>().position.x = 1750;
+            enemy3.getComponent<TransformComponent>().position.y = 370;
+            enemy3.getComponent<HPComponent>().healthPoints = 3;
+            enemy3.addGroup(groupEnemies);
 
-        enemy2.getComponent<TransformComponent>().position.x = 220;
-        enemy2.getComponent<TransformComponent>().position.y = 470;
-        enemy2.getComponent<HPComponent>().healthPoints = 3;
-        enemy2.reactivate();
-        enemy2.addGroup(groupEnemies);
+            enemy4.reactivate();
+            enemy4.getComponent<TransformComponent>().position.x = 320;
+            enemy4.getComponent<TransformComponent>().position.y = 1650;
+            enemy4.getComponent<HPComponent>().healthPoints = 3;
+            enemy4.addGroup(groupEnemies);
 
-
-        enemy3.getComponent<TransformComponent>().position.x = 1750;
-        enemy3.getComponent<TransformComponent>().position.y = 370;
-        enemy3.getComponent<HPComponent>().healthPoints = 3;
-        enemy3.reactivate();
-        enemy3.addGroup(groupEnemies);
-
-
-        enemy4.getComponent<TransformComponent>().position.x = 320;
-        enemy4.getComponent<TransformComponent>().position.y = 1650;
-        enemy4.getComponent<HPComponent>().healthPoints = 3;
-        enemy4.reactivate();
-        enemy4.addGroup(groupEnemies);
-
-
-        enemy5.getComponent<TransformComponent>().position.x = 1580;
-        enemy5.getComponent<TransformComponent>().position.y = 1700;
-        enemy5.getComponent<HPComponent>().healthPoints = 3;
-        enemy5.reactivate();
-        enemy5.addGroup(groupEnemies);*/
+            enemy5.reactivate();
+            enemy5.getComponent<TransformComponent>().position.x = 1580;
+            enemy5.getComponent<TransformComponent>().position.y = 1700;
+            enemy5.getComponent<HPComponent>().healthPoints = 3;
+            enemy5.addGroup(groupEnemies);
     }
 }
 void Game::backToIsland(float prevX, float prevY) {
@@ -419,6 +469,8 @@ void Game::handleEvents() {
     bool mainMenuinitialized = false;
     bool optionsInitialized = false;
     bool pauseInitialized = false;
+    bool game_over_initialized = false;
+    bool ReplayInitialized = false;
 
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -430,10 +482,10 @@ void Game::handleEvents() {
     }
     switch (currentState) {
         case GameState::MAIN_MENU:
-            if (!mainMenuinitialized) {
+            //if (!mainMenuinitialized) {
                 initMainMenu();
-                mainMenuinitialized = true;
-            }
+                //mainMenuinitialized = true;
+            //}
             updateMainMenu();
             renderMainMenu();
         break;
@@ -460,13 +512,51 @@ void Game::handleEvents() {
             updatePause();
             renderPause();
         break;
+        case GameState::REPLAY:
+            if (!ReplayInitialized) {
+                initReplay();
+                ReplayInitialized = true;
+            }
+            replay();
+            renderReplay();
+        break;
+        case GameState::GAME_OVER:
+            if (!game_over_initialized) {
+                initGameOver();
+                //highscore(username, score);
+                game_over_initialized = true;
+            }
+            updateGameOver();
+            renderGameOver();
+        break;
+        case GameState::USER_INPUT:
+            //initUserInput();
+        if (event.type == SDL_TEXTINPUT) {
+            if (username.length() < 12) {
+                username += event.text.text;
+            }
+        }
+        if (event.type == SDL_KEYDOWN) {
+            if (event.key.keysym.sym == SDLK_BACKSPACE && !username.empty()) {
+                username.pop_back();
+            }
+            if (event.key.keysym.sym == SDLK_RETURN && !username.empty()) {
+                SDL_StopTextInput();
+                currentState = GameState::PLAYING;
+            }
+        }
+            renderUserInput();
+        break;
     }
+
     if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE && currentState == GameState::PLAYING) {
         currentState = GameState::PAUSED;
     }
     else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE && currentState == GameState::OPTIONS) {
         currentState = GameState::MAIN_MENU;
     }
+    if (game_over || level2Cleared)
+        currentState = GameState::GAME_OVER;
 
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
@@ -497,22 +587,18 @@ void Game::handleEvents() {
 void Game :: update() {
     manager.refresh();
     manager.update();
-
     all_pets = pets.size();
-    //all_pets = 5;
 
     scaleX = (float)SCREEN_WIDTH / 1080;
     scaleY = (float)SCREEN_HEIGHT / 720;
-
-    /*for (auto& t : tiles) {
-        if (t->hasComponent<ColiderComponent>()) {
-            if (Collision::AABB(lab.getComponent<ColiderComponent>().collider, t->getComponent<ColiderComponent>().collider)) {
-                lab.getComponent<TransformComponent>().position.x = rand()%500+1000;
-                lab.getComponent<TransformComponent>().position.y = rand()%500+1000;
-            }
-        }
-    }*/
-
+    
+    std::ofstream replayFile("replay.bin", std::ios::binary | std::ios::app);
+    replayGame data;
+    std::cout<<player.getComponent<TransformComponent>().velocity.x<<" "<<player.getComponent<TransformComponent>().velocity.y<<std::endl;
+    data.velocityX = player.getComponent<TransformComponent>().velocity.x;
+    data.velocityY = player.getComponent<TransformComponent>().velocity.y;
+    replayFile.write((char*)&data, sizeof(data));
+    //replayFile.close();
 
 
 
@@ -538,7 +624,7 @@ void Game :: update() {
         if (pet->isActive()) {
             Collision::CheckCollisions(*pet, pets);
             if (Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>()) && (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F)) {
-                pet->getComponent<PetComponent>().follow = true;
+                //pet->getComponent<PetComponent>().follow = true;
                 //pet->destroy();
                 if (!pet->getComponent<PetComponent>().saved) {
                     pet->getComponent<PetComponent>().saved = true;
@@ -559,10 +645,10 @@ void Game :: update() {
             if (e->isActive() && p->isActive()) {
                 if (Collision::AABB(p->getComponent<ColiderComponent>(), e->getComponent<ColiderComponent>())) {
                     p->deactivate();
-                    bulletPool.push_back(p);
+                    //bulletPool.push_back(p);
                     //e->deactivate();
                     e->getComponent<HPComponent>().healthPoints--;
-                    enemyPool.push_back(e);
+                    //enemyPool.push_back(e);
                     break;
                 }
             }
@@ -578,9 +664,6 @@ void Game :: update() {
             }
         }
     }
-
-    static float prevX;
-    static float prevY;
 
     if (Collision::AABB(player.getComponent<ColiderComponent>(), lab.getComponent<ColiderComponent>())) {
         if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F) {
@@ -636,11 +719,11 @@ void Game :: update() {
 
 }
 void Game::initMainMenu() {
-    play_button.addComponent<buttonComponent>(100 + scaleX * 30, 50 * scaleY + scaleY * 200, 1024, 1024, "assets/play_button");
-    quit_button.addComponent<buttonComponent>(100 + scaleX * 30, 100 * scaleY + scaleY * 275, 1024, 1024, "assets/exit_button");
-    options_button.addComponent<buttonComponent>(100 + scaleX * 30, 150 * scaleY + scaleY * 350, 1024, 1024, "assets/options_button");
-    load_button.addComponent<buttonComponent>(100 + 30 * scaleX, 200 * scaleY + scaleY * 425, 1024, 1024, "assets/load_game_button");
-
+    play_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 200, 1024, 1024, "assets/play_button");
+    load_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 300, 1024, 1024, "assets/load_game_button");
+    replay_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 400, 1024, 1024, "assets/replay_button" );
+    options_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 500, 1024, 1024, "assets/options_button");
+    quit_button.addComponent<buttonComponent>(100 + scaleX * 30,  scaleY * 600, 1024, 1024, "assets/exit_button");
 }
 
 void Game::updateMainMenu() {
@@ -648,6 +731,7 @@ void Game::updateMainMenu() {
     SDL_SetTextureAlphaMod(button_exit, 255);
     SDL_SetTextureAlphaMod(button_options, 255);
     SDL_SetTextureAlphaMod(button_load_game, 255);
+    SDL_SetTextureAlphaMod(button_replay, 255);
 
     SDL_Rect mouse {0, 0, 1, 1};
     SDL_GetMouseState(&mouse.x, &mouse.y);
@@ -655,7 +739,7 @@ void Game::updateMainMenu() {
         SDL_SetTextureBlendMode(button_play, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(button_play, 100);
         if (clicked)
-        currentState = GameState::PLAYING;
+        currentState = GameState::USER_INPUT;
     }
     else if (Collision::AABB(quit_button.getComponent<buttonComponent>().destRect, mouse)) {
         SDL_SetTextureBlendMode(button_exit, SDL_BLENDMODE_BLEND);
@@ -678,6 +762,13 @@ void Game::updateMainMenu() {
             currentState = GameState::PLAYING;
         }
     }
+    else if (Collision::AABB(replay_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureBlendMode(button_replay, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(button_replay, 100);
+        if (clicked){
+            currentState = GameState::REPLAY;
+        }
+    }
 }
 void Game::renderMainMenu() {
     SDL_RenderClear(renderer);
@@ -686,11 +777,23 @@ void Game::renderMainMenu() {
     SDL_Rect srcRect{0,0,1920,1280}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
     SDL_SetTextureAlphaMod(mainmenuscreen, 100);
 
+   /*users data;
+    std::ifstream highscores("highscores.bin", std::ios::binary);
+    if (highscores.is_open()) {
+        while (highscores.read((char*)&data, sizeof(data))) {
+            Texture::RenderText(data.name, 2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2, 1);
+        }
+    }
+    highscores.close();*/
+
     Texture::Draw(mainmenuscreen, srcRect, destRect, SDL_FLIP_NONE);
     Texture::Draw(button_play, play_button.getComponent<buttonComponent>().srcRect, play_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_exit, quit_button.getComponent<buttonComponent>().srcRect, quit_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_options, options_button.getComponent<buttonComponent>().srcRect, options_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_load_game, load_button.getComponent<buttonComponent>().srcRect, load_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+    Texture::Draw(button_replay, replay_button.getComponent<buttonComponent>().srcRect, replay_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+    Texture::RenderNumber(69, SCREEN_WIDTH-100, 10, 1);
+    Texture::RenderText("sigma boy", SCREEN_WIDTH-100, 30, 0.5);
 
     SDL_RenderPresent(renderer);
 }
@@ -774,13 +877,13 @@ void Game::updatePause() {
         if (clicked)
             currentState = GameState::PLAYING;
     }
-    if (Collision::AABB(back_to_menu.getComponent<buttonComponent>().destRect, mouse)) {
+    else if (Collision::AABB(back_to_menu.getComponent<buttonComponent>().destRect, mouse)) {
         SDL_SetTextureBlendMode(button_back_to_menu, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(button_back_to_menu, 100);
         if (clicked)
             currentState = GameState::MAIN_MENU;
     }
-    if (Collision::AABB(save_button.getComponent<buttonComponent>().destRect, mouse)) {
+    else if (Collision::AABB(save_button.getComponent<buttonComponent>().destRect, mouse)) {
         SDL_SetTextureBlendMode(button_save_game, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(button_save_game, 100);
         if (clicked)
@@ -801,7 +904,50 @@ void Game::renderPause() {
     SDL_RenderPresent(renderer);
 }
 
+void Game :: initGameOver() {
+        float xpos = SCREEN_WIDTH / 2;
+        float ypos = SCREEN_HEIGHT / 3;
 
+        restart_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos, 1024, 1024, "Restart");
+}
+void Game::updateGameOver() {
+    SDL_Rect mouse {0, 0, 1, 1};
+    SDL_GetMouseState(&mouse.x, &mouse.y);
+    SDL_SetTextureAlphaMod(button_resume, 255);
+
+    if (Collision::AABB(restart_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureBlendMode(button_resume, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(button_resume, 100);
+        if (clicked){
+            resetGame();
+            currentState = GameState::PLAYING;
+        }
+    }
+}
+void Game::renderGameOver() {
+    SDL_RenderClear(renderer);
+    /*std::ifstream highscores("highscores.bin", std::ios::binary);
+    users user;
+    for (int i=0; i<3; i++) {
+        highscores.read((char*)&user, sizeof(user));
+        Texture::RenderText(user.name,SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + i * 30, SDL_FLIP_NONE);
+        Texture::RenderNumber(user.score, SCREEN_WIDTH / 2 + user.name.size() * 16, SCREEN_HEIGHT / 3 + i * 30, SDL_FLIP_NONE);
+    }
+    highscores.close();*/
+    Texture::Draw(button_resume, restart_button.getComponent<buttonComponent>().srcRect, restart_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+
+
+    SDL_RenderPresent(renderer);
+}
+
+void Game::renderUserInput() {
+    SDL_RenderClear(renderer);
+
+    Texture::RenderText("ENTER USERNAME: ", SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 - 25, 1);
+    Texture::RenderText(username, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 1);
+
+    SDL_RenderPresent(renderer);
+}
 
 void Game :: render() {
     SDL_RenderClear(renderer);
@@ -844,24 +990,12 @@ void Game :: render() {
         SDL_SetTextureAlphaMod(savedPet, 255);
     }
 
-    if (!player.isActive()) {
-        srcRect = { 0,0,1028,1028 };
-        destRect = {0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
-        Texture::Draw(game_overTexture, srcRect, destRect, SDL_FLIP_NONE);
-    }
-
-
-
-    if (level2Cleared) {
-        srcRect = { 0,0,1028,1028 };
-        destRect = {0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
-        Texture::Draw(winTexture, srcRect, destRect, SDL_FLIP_NONE);
-    }
-
-
     SDL_RenderPresent(renderer);
 
 }
+
+
+
 void Game::centerWindow(SDL_Window* window) {
     int windowWidth, windowHeight;
     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
@@ -877,10 +1011,11 @@ void Game::centerWindow(SDL_Window* window) {
 
 void Game::saveGame() {
     std::ofstream saveFile("saved_game.bin", std::ios::binary);
-    std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
     struct saveGame data;
     data.playerX = player.getComponent<TransformComponent>().position.x;
     data.playerY = player.getComponent<TransformComponent>().position.y;
+    data.prevX = prevX;
+    data.prevY = prevY;
     data.playerAmmo = player.getComponent<PlayerComponent>().ammo_count;
     data.playerHealth = player.getComponent<HPComponent>().healthPoints;
     data.animalsSaved = player.getComponent<PlayerComponent>().animals_saved;
@@ -892,11 +1027,12 @@ void Game::saveGame() {
 void Game::loadGame() {
     std::ifstream saveFile("saved_game.bin", std::ios::binary);
     if (saveFile.is_open()) {
-        std::cout<<"save file opened"<<std::endl;
         struct saveGame data;
         saveFile.read((char*)&data, sizeof(data));
         player.getComponent<TransformComponent>().position.x = data.playerX;
         player.getComponent<TransformComponent>().position.y = data.playerY;
+        prevX = data.prevX;
+        prevY = data.prevY;
         player.getComponent<PlayerComponent>().ammo_count = data.playerAmmo;
         player.getComponent<HPComponent>().healthPoints = data.playerHealth;
         player.getComponent<PlayerComponent>().animals_saved = data.playerAmmo;
@@ -913,16 +1049,99 @@ void Game::loadGame() {
             //mapFile = "assets/lab_tiles.png";
             //Map::LoadMap("assets/level2.txt", Map::sizeX, Map::sizeY);
         }//
-        else if (inDungeon) {
-            loadDungeon();
-            //tiles.clear();
-            //mapFile = "assets/lab_tiles.png";
-            //Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
-        }
+       else if (inDungeon) {
+           loadDungeon();
+           //tiles.clear();
+           //mapFile = "assets/lab_tiles.png";
+           //Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
+       }
     }
-    std::cout<<"save file closed"<<std::endl;
+
     saveFile.close();
 }
+void Game::initReplay() {
+    replayFile.open("replay.bin", std::ios::binary);
+    mapFile = "assets/map_tiles.png";
+    Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
+    player.getComponent<TransformComponent>().position.x = 256;
+    player.getComponent<TransformComponent>().position.y = 132;
+}
+
+void Game::replay() {
+    manager.refresh();
+    manager.update();
+
+    if (replayFile.is_open()) {
+        replayGame data;
+        if (replayFile.read((char*)&data, sizeof(data))) {
+            std::cout<<data.velocityX<<" "<<data.velocityY<<std::endl;
+            player.getComponent<TransformComponent>().velocity.x = data.velocityX;
+            player.getComponent<TransformComponent>().velocity.y = data.velocityY;
+            //player.getComponent<TransformComponent>().position.x += data.velocityX * player.getComponent<TransformComponent>().speed;
+            //player.getComponent<TransformComponent>().position.y += data.velocityY * player.getComponent<TransformComponent>().speed;
+        }
+        else
+        replayFile.close();
+    }
+}
+void Game::renderReplay(){
+    SDL_RenderClear(renderer);
+
+    for (auto& t : tiles) t->draw();
+    for (auto& p : players) p->draw();
+
+    SDL_RenderPresent(renderer);
+}
+
+void Game::resetGame() {
+
+    inDungeon = false;
+    level1Cleared = false;
+    level2Cleared = false;
+
+    //pets.clear();
+    //enemies.clear();
+    //tiles.clear();
+
+    mapFile = "assets/map_tiles.png";
+    Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
+
+    player.reactivate();
+    player.getComponent<TransformComponent>().position.x = 256;
+    player.getComponent<TransformComponent>().position.y = 132;
+    player.getComponent<HPComponent>().healthPoints = 3;
+    player.addGroup(groupPlayers);
+
+    lab.getComponent<TransformComponent>().position.x = rand()%(500)+1000;
+    lab.getComponent<TransformComponent>().position.y = rand()%(500)+1000;
+    lab.addGroup(groupMap);
+}
+
+void Game::highscore(std::string username, int score) {
+    users user;
+    user.name = username;
+    user.score = score;
+
+    std::ifstream highscoreFile("highscores.bin", std::ios::binary);
+    std::ofstream newFile("new.bin", std::ios::binary);
+    users other;
+    bool check = false;
+    while (highscoreFile.read((char*)&other, sizeof(other))) {
+        if (user.score > other.score && !check) {
+            newFile.write((char*)&other, sizeof(other));
+            check = true;
+        }
+        newFile.write((char*)&other, sizeof(other));
+    }
+    if (!check) {
+        newFile.write((char*)&other, sizeof(other));
+    }
+    newFile.close();
+    highscoreFile.close();
+    remove("highscores.bin");
+    rename("new.bin", "highscores.bin");
+}
+
 
 void Game::clean() {
     SDL_DestroyWindow(window);

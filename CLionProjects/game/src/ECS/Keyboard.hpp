@@ -29,6 +29,9 @@ class Keyboard : public Component {
             velX /= length;
             velY /= length;
         }
+        if (keystates[SDL_SCANCODE_F1]) {
+            Game::game_over = true;
+        }
 
         if (keystates[SDL_SCANCODE_LSHIFT]) {
             transform->speed = 4;

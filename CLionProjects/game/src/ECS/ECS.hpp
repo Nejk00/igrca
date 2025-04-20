@@ -128,6 +128,9 @@ class Manager {
     void draw() {
         for (auto& e : entities) e->draw();
     }
+    void clear() {
+        entities.clear();
+    }
 
     void refresh() {
     for (auto i(0u); i < maxGroups; i++) {
