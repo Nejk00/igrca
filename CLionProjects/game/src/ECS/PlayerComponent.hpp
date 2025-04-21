@@ -9,6 +9,7 @@ class PlayerComponent : public Component {
     int ammo_count = 5;
     int max_ammo = 5;
     int animals_saved = 0;
+    int enemiesKilled = 0;
 
     void init() override {
 

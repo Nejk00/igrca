@@ -16,7 +16,7 @@ public:
 
     }
     void update() override {
-        if (healthPoints <= 0) {
+        if (healthPoints <= 0 && entity->isActive()) {
             if (entity->hasComponent<PlayerComponent>()) {
                 Game::game_over = true;
             }

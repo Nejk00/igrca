@@ -16,6 +16,7 @@ class Keyboard : public Component {
         sprite = &entity->getComponent<SpriteComponent>();
     }
     void update() override {
+
         const Uint8* keystates = SDL_GetKeyboardState(nullptr);
 
         float velX = (keystates[SDL_SCANCODE_A] ? -1.0f : 0.0f) +(keystates[SDL_SCANCODE_D] ? 1.0f : 0.0f);

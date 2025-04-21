@@ -19,6 +19,8 @@ class Game {
     SDL_Window *window;
 
 public:
+    static bool highscoreUpdated;
+    static int flags;
     std::string username;
     std::ifstream replayFile;
     static int score;
@@ -64,6 +66,7 @@ public:
     SDL_Texture *button_save_game;
     SDL_Texture *button_load_game;
     SDL_Texture *button_replay;
+    SDL_Texture *button_play_again;
 
     static SDL_Texture *numbersTexture;
     static SDL_Texture *lettersTexture;
@@ -82,10 +85,12 @@ public:
     void handleEvents();
     void centerWindow(SDL_Window*);
     void RenderNumber(int number, int x, int y, float scale);
+    void calculateScore();
 
     void saveGame();
     void loadGame();
     void highscore(std::string username, int score);
+    void outputScores();
 
     void initReplay();
     void replay();

@@ -70,8 +70,8 @@ class Entity {
     }
     void draw() {
         for (auto& c : components)c -> draw();
-
     }
+
     bool isActive() const {return active;}
     bool isPooled() const {return pooled;}
 
@@ -87,6 +87,13 @@ class Entity {
         active = true;
         pooled = false;
     }
+    void removeAllComponentsAndGroups() {
+        components.clear();
+        componentArray.fill(nullptr);
+        componentBtSet.reset();
+        groupBtSet.reset();  // Clears all group associations
+    }
+
     bool hasGroup(Group mGroup) {return groupBtSet[mGroup];}
     void addGroup(Group mGroup);
     void delGroup(Group mGroup){groupBtSet[mGroup]=false;}

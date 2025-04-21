@@ -15,17 +15,20 @@
 #include "ECS/buttonComponent.hpp"
 #include"ECS/TurretComponent.hpp"
 struct users {
-    std::string name;
+    char name[12];
     int score;
 };
 struct replayGame {
-    float velocityX, velocityY;
+    float velocityX, velocityY, speed;
+    int changeMap;
 };
 
 struct saveGame {
     float playerX, playerY, prevX, prevY;
-    int playerHealth, playerAmmo, animalsSaved;
+    int playerHealth, playerAmmo, animalsSaved, score;
     bool inDungeon, level1cleared;
+    std::string username;
+
 };
 
 enum class GameState {
@@ -45,6 +48,7 @@ float Game:: prevX = 0, Game:: prevY = 0;
 
 bool Game :: level1Cleared = false;
 bool Game :: level2Cleared = false;
+bool Game::highscoreUpdated = false;
 int Game :: score = 0;
 float Game :: scaleX = 1, Game::scaleY = 1;
 
@@ -52,6 +56,7 @@ int Game :: SCREEN_WIDTH = 1080;
 int Game :: SCREEN_HEIGHT = 720;
 int Game :: LETTER_WIDTH = 16;
 int Game :: LETTER_HEIGHT = 16;
+int Game:: flags = 0;
 
 bool Game :: clicked = false;
 bool Game :: inDungeon = false;
@@ -69,15 +74,18 @@ Manager manager;
 
 std::vector<ColiderComponent*> Game :: colliders;
 
+std::vector<replayGame > replayVector;
 std::vector<Entity*> bulletPool;
 std::vector<Entity*> enemyPool;
 std::vector<Entity*> petPool;
+std::vector<replayGame> replayData;
 
 int Map::sizeX = 60;
 int Map::sizeY = 60;
 
 std::string  mapFile = "assets/map_tiles.png";
 
+auto& back_to_menu_button(manager.addEntity());
 auto& restart_button(manager.addEntity());
 auto&replay_button(manager.addEntity());
 auto& load_button(manager.addEntity());
@@ -92,6 +100,7 @@ auto& quit_button(manager.addEntity());
 auto& options_button(manager.addEntity());
 
 auto& player(manager.addEntity());
+
 auto& enemy(manager.addEntity());
 auto& enemy2(manager.addEntity());
 auto& enemy3(manager.addEntity());
@@ -108,6 +117,13 @@ auto& pet2(manager.addEntity());
 auto& pet3(manager.addEntity());
 auto& pet4(manager.addEntity());
 auto& pet5(manager.addEntity());
+auto& pet6(manager.addEntity());
+auto& pet7(manager.addEntity());
+auto& pet8(manager.addEntity());
+auto& pet9(manager.addEntity());
+auto& pet10(manager.addEntity());
+
+
 auto& turret(manager.addEntity());
 auto& lab(manager.addEntity());
 
@@ -118,7 +134,7 @@ auto& players(manager.getGroup(groupPlayers));
 auto& enemies(manager.getGroup(groupEnemies));
 auto& pets(manager.getGroup(groupPet));
 auto& projectiles(manager.getGroup(groupProjectile));
-auto& turrets = manager.getGroup(groupTurrets);
+
 
 
 void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
@@ -127,7 +143,7 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
         SCREEN_HEIGHT = 1080;
     }
     srand(time(NULL));
-    int flags = 0;
+    //int flags = 0;
     if (fullscreen) {
         flags = SDL_WINDOW_FULLSCREEN;
     }
@@ -135,13 +151,14 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
     if (SDL_Init(SDL_INIT_EVERYTHING) == 0) {
         std::cout << "SDL_Init OK" << std::endl;
 
-        window = SDL_CreateWindow(title, xpos, ypos, SCREEN_WIDTH, SCREEN_HEIGHT, flags );
+        window = SDL_CreateWindow(title, xpos, ypos, SCREEN_WIDTH, SCREEN_HEIGHT, flags | SDL_WINDOW_RESIZABLE);
         if (window) {
             std::cout << "SDL_CreateWindow OK" << std::endl;
         }
         renderer = SDL_CreateRenderer(window, -1, 0);
         if (renderer) {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderSetLogicalSize(renderer, 1080, 720);
             std::cout << "SDL_CreateRenderer OK" << std::endl;
         }
         isRunning = true;
@@ -173,10 +190,11 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
         button_replay = Texture::LoadTexture("assets/replay_button.png");
         numbersTexture = Texture::LoadTexture("assets/numbers.png");
         lettersTexture = Texture::LoadTexture("assets/letters.png");
+        button_play_again = Texture::LoadTexture("assets/play_again_button.png");
 
         Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
-        lab.addComponent<TransformComponent>(rand()%500+1000, rand()%500+1000, 16, 16, 2);
+        lab.addComponent<TransformComponent>(rand()%300+800, rand()%500+800, 16, 16, 2);
         lab.addComponent<SpriteComponent>("assets/lojtra.png");
         lab.addComponent<ColiderComponent>("lab");
         lab.addGroup(groupMap);
@@ -189,6 +207,7 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
         player.addComponent<PlayerComponent>();
         player.addGroup(groupPlayers);
 
+    outputScores();
 }
 
 void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
@@ -225,7 +244,6 @@ void Game::loadDungeon() {
     pets.clear();
     enemies.clear();
     mapFile = "assets/lab_tiles.png";
-    bool initialized = false;
 
     if (!level1Cleared) {
         Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
@@ -302,13 +320,6 @@ void Game::loadDungeon() {
         pet5.addComponent<PetComponent>(&player);
         pet5.addGroup(groupPet);
 
-        turret.addComponent<TransformComponent>(450, 650, 32, 32, 1);
-        turret.addComponent<SpriteComponent>("assets/dirt.png");
-        turret.addComponent<ColiderComponent>("turret");
-        turret.addComponent<TurretComponent>(&player);
-        turret.addGroup(groupTurrets);
-
-        initialized = true;
     }
     else {
         Map::LoadMap("assets/level2.txt", Map::sizeX, Map::sizeY);
@@ -320,138 +331,78 @@ void Game::loadDungeon() {
         lab.getComponent<TransformComponent>().position.y = 930;
         lab.addGroup(groupMap);
 
-        if (!initialized) {
-            enemy.addComponent<TransformComponent>(450, 600, 30, 22, 2, 1);
-            enemy.addComponent<SpriteComponent>("assets/enemy.png", true);
-            enemy.addComponent<ColiderComponent>("enemy");
-            enemy.addComponent<EnemyComponent>(&player, "enemy");
-            enemy.addComponent<HPComponent>(3);
-            enemy.addGroup(groupEnemies);
 
-            enemy2.addComponent<TransformComponent>(1500, 300, 41, 62, 1, 1);
-            enemy2.addComponent<SpriteComponent>("assets/wolf.png", true);
-            enemy2.addComponent<ColiderComponent>("wolf");
-            enemy2.addComponent<EnemyComponent>(&player, "wolf");
-            enemy2.addComponent<HPComponent>(3);
-            enemy2.addGroup(groupEnemies);
+            enemy6.addComponent<TransformComponent>(1100, 140, 30, 22, 2, 1);
+            enemy6.addComponent<SpriteComponent>("assets/enemy.png", true);
+            enemy6.addComponent<ColiderComponent>("enemy");
+            enemy6.addComponent<EnemyComponent>(&player, "enemy");
+            enemy6.addComponent<HPComponent>(3);
+            enemy6.addGroup(groupEnemies);
 
-            enemy3.addComponent<TransformComponent>(220, 1400, 30, 22, 2, 1);
-            enemy3.addComponent<SpriteComponent>("assets/enemy.png", true);
-            enemy3.addComponent<ColiderComponent>("enemy");
-            enemy3.addComponent<EnemyComponent>(&player, "enemy");
-            enemy3.addComponent<HPComponent>(3);
-            enemy3.addGroup(groupEnemies);
+            enemy7.addComponent<TransformComponent>(220, 470, 41, 62, 1, 1);
+            enemy7.addComponent<SpriteComponent>("assets/wolf.png", true);
+            enemy7.addComponent<ColiderComponent>("wolf");
+            enemy7.addComponent<EnemyComponent>(&player, "wolf");
+            enemy7.addComponent<HPComponent>(3);
+            enemy7.addGroup(groupEnemies);
 
-            enemy4.addComponent<TransformComponent>(1540, 860, 41, 62, 1, 1);
-            enemy4.addComponent<SpriteComponent>("assets/wolf.png", true);
-            enemy4.addComponent<ColiderComponent>("wolf");
-            enemy4.addComponent<EnemyComponent>(&player, "wolf");
-            enemy4.addComponent<HPComponent>(3);
-            enemy4.addGroup(groupEnemies);
+            enemy8.addComponent<TransformComponent>(1750, 370, 30, 22, 2, 1);
+            enemy8.addComponent<SpriteComponent>("assets/enemy.png", true);
+            enemy8.addComponent<ColiderComponent>("enemy");
+            enemy8.addComponent<EnemyComponent>(&player, "enemy");
+            enemy8.addComponent<HPComponent>(3);
+            enemy8.addGroup(groupEnemies);
 
-            enemy5.addComponent<TransformComponent>(840, 1500, 30, 22, 2, 1);
-            enemy5.addComponent<SpriteComponent>("assets/enemy.png", true);
-            enemy5.addComponent<ColiderComponent>("enemy");
-            enemy5.addComponent<EnemyComponent>(&player, "enemy");
-            enemy5.addComponent<HPComponent>(3);
-            enemy5.addGroup(groupEnemies);
+            enemy9.addComponent<TransformComponent>(320, 1650, 41, 62, 1, 1);
+            enemy9.addComponent<SpriteComponent>("assets/wolf.png", true);
+            enemy9.addComponent<ColiderComponent>("wolf");
+            enemy9.addComponent<EnemyComponent>(&player, "wolf");
+            enemy9.addComponent<HPComponent>(3);
+            enemy9.addGroup(groupEnemies);
 
-            pet1.addComponent<TransformComponent>(380, 600, 32, 32, 1, 2);
-            pet1.addComponent<SpriteComponent>("assets/pet.png", true);
-            pet1.addComponent<ColiderComponent>("pet");
-            pet1.addComponent<PetComponent>(&player);
-            pet1.addGroup(groupPet);
+            enemy10.addComponent<TransformComponent>(1580, 1700, 30, 22, 2, 1);
+            enemy10.addComponent<SpriteComponent>("assets/enemy.png", true);
+            enemy10.addComponent<ColiderComponent>("enemy");
+            enemy10.addComponent<EnemyComponent>(&player, "enemy");
+            enemy10.addComponent<HPComponent>(3);
+            enemy10.addGroup(groupEnemies);
 
-            pet2.addComponent<TransformComponent>(1500, 260, 32, 32, 1, 2);
-            pet2.addComponent<SpriteComponent>("assets/pet2.png", true);
-            pet2.addComponent<ColiderComponent>("pet");
-            pet2.addComponent<PetComponent>(&player);
-            pet2.addGroup(groupPet);
+            pet6.addComponent<TransformComponent>(250, 550, 32, 32, 1, 2);
+            pet6.addComponent<SpriteComponent>("assets/pet.png", true);
+            pet6.addComponent<ColiderComponent>("pet");
+            pet6.addComponent<PetComponent>(&player);
+            pet6.addGroup(groupPet);
 
-            pet3.addComponent<TransformComponent>(950, 1510, 32, 32, 1, 2);
-            pet3.addComponent<SpriteComponent>("assets/pet2.png", true);
-            pet3.addComponent<ColiderComponent>("pet");
-            pet3.addComponent<PetComponent>(&player);
-            pet3.addGroup(groupPet);
+            pet7.addComponent<TransformComponent>(1060, 175, 32, 32, 1, 2);
+            pet7.addComponent<SpriteComponent>("assets/pet2.png", true);
+            pet7.addComponent<ColiderComponent>("pet");
+            pet7.addComponent<PetComponent>(&player);
+            pet7.addGroup(groupPet);
 
-            pet4.addComponent<TransformComponent>(1550, 820, 32, 32, 1, 2);
-            pet4.addComponent<SpriteComponent>("assets/pet.png", true);
-            pet4.addComponent<ColiderComponent>("pet");
-            pet4.addComponent<PetComponent>(&player);
-            pet4.addGroup(groupPet);
+            pet8.addComponent<TransformComponent>(165, 1670, 32, 32, 1, 2);
+            pet8.addComponent<SpriteComponent>("assets/pet2.png", true);
+            pet8.addComponent<ColiderComponent>("pet");
+            pet8.addComponent<PetComponent>(&player);
+            pet8.addGroup(groupPet);
 
-            pet5.addComponent<TransformComponent>(270, 1420, 32, 32, 1, 2);
-            pet5.addComponent<SpriteComponent>("assets/pet.png", true);
-            pet5.addComponent<ColiderComponent>("pet");
-            pet5.addComponent<PetComponent>(&player);
-            pet5.addGroup(groupPet);
+            pet9.addComponent<TransformComponent>(1600, 1700, 32, 32, 1, 2);
+            pet9.addComponent<SpriteComponent>("assets/pet.png", true);
+            pet9.addComponent<ColiderComponent>("pet");
+            pet9.addComponent<PetComponent>(&player);
+            pet9.addGroup(groupPet);
+
+            pet10.addComponent<TransformComponent>(1800, 350, 32, 32, 1, 2);
+            pet10.addComponent<SpriteComponent>("assets/pet.png", true);
+            pet10.addComponent<ColiderComponent>("pet");
+            pet10.addComponent<PetComponent>(&player);
+            pet10.addGroup(groupPet);
         }
-        pet1.getComponent<TransformComponent>().position.x = 250;
-            pet1.getComponent<TransformComponent>().position.y = 550;
-            pet1.getComponent<PetComponent>().saved = false;
-            pet1.addGroup(groupPet);
-
-
-            pet2.getComponent<TransformComponent>().position.x = 1060;
-            pet2.getComponent<TransformComponent>().position.y = 175;
-            pet2.getComponent<PetComponent>().saved = false;
-            pet2.addGroup(groupPet);
-
-
-            pet3.getComponent<TransformComponent>().position.x = 165;
-            pet3.getComponent<TransformComponent>().position.y = 1670;
-            pet3.getComponent<PetComponent>().saved = false;
-            pet3.addGroup(groupPet);
-
-
-            pet4.getComponent<TransformComponent>().position.x = 1600;
-            pet4.getComponent<TransformComponent>().position.y = 1700;
-            pet4.getComponent<PetComponent>().saved = false;
-            pet4.addGroup(groupPet);
-
-
-            pet5.getComponent<TransformComponent>().position.x = 1800;
-            pet5.getComponent<TransformComponent>().position.y = 350;
-            pet5.getComponent<PetComponent>().saved = false;
-            pet5.addGroup(groupPet);
-
-            enemy.reactivate();
-            enemy.getComponent<TransformComponent>().position.x = 1100;
-            enemy.getComponent<TransformComponent>().position.y = 140;
-            enemy.getComponent<HPComponent>().healthPoints = 3;
-            enemy.addGroup(groupEnemies);
-
-            enemy2.reactivate();
-            enemy2.getComponent<TransformComponent>().position.x = 220;
-            enemy2.getComponent<TransformComponent>().position.y = 470;
-            enemy2.getComponent<HPComponent>().healthPoints = 3;
-            enemy2.addGroup(groupEnemies);
-
-            enemy3.reactivate();
-            enemy3.getComponent<TransformComponent>().position.x = 1750;
-            enemy3.getComponent<TransformComponent>().position.y = 370;
-            enemy3.getComponent<HPComponent>().healthPoints = 3;
-            enemy3.addGroup(groupEnemies);
-
-            enemy4.reactivate();
-            enemy4.getComponent<TransformComponent>().position.x = 320;
-            enemy4.getComponent<TransformComponent>().position.y = 1650;
-            enemy4.getComponent<HPComponent>().healthPoints = 3;
-            enemy4.addGroup(groupEnemies);
-
-            enemy5.reactivate();
-            enemy5.getComponent<TransformComponent>().position.x = 1580;
-            enemy5.getComponent<TransformComponent>().position.y = 1700;
-            enemy5.getComponent<HPComponent>().healthPoints = 3;
-            enemy5.addGroup(groupEnemies);
-    }
 }
 void Game::backToIsland(float prevX, float prevY) {
     mapFile = "assets/map_tiles.png";
     tiles.clear();
     enemies.clear();
     pets.clear();
-    turrets.clear();
     Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
     player.getComponent<TransformComponent>().position.x = prevX;
@@ -466,11 +417,11 @@ void Game::backToIsland(float prevX, float prevY) {
 void Game::handleEvents() {
     static int max_ammo = 5;
     static int ammo_reload = 0;
-    bool mainMenuinitialized = false;
-    bool optionsInitialized = false;
-    bool pauseInitialized = false;
-    bool game_over_initialized = false;
-    bool ReplayInitialized = false;
+    static bool mainMenuinitialized = false;
+    static bool optionsInitialized = false;
+    static bool pauseInitialized = false;
+    static bool game_over_initialized = false;
+    static bool ReplayInitialized = false;
 
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -482,10 +433,10 @@ void Game::handleEvents() {
     }
     switch (currentState) {
         case GameState::MAIN_MENU:
-            //if (!mainMenuinitialized) {
+            if (!mainMenuinitialized) {
                 initMainMenu();
-                //mainMenuinitialized = true;
-            //}
+                mainMenuinitialized = true;
+            }
             updateMainMenu();
             renderMainMenu();
         break;
@@ -523,14 +474,18 @@ void Game::handleEvents() {
         case GameState::GAME_OVER:
             if (!game_over_initialized) {
                 initGameOver();
-                //highscore(username, score);
                 game_over_initialized = true;
+            }
+            if (!highscoreUpdated) {
+                calculateScore();
+                highscore(username, score);
+                highscoreUpdated = true;
             }
             updateGameOver();
             renderGameOver();
         break;
         case GameState::USER_INPUT:
-            //initUserInput();
+
         if (event.type == SDL_TEXTINPUT) {
             if (username.length() < 12) {
                 username += event.text.text;
@@ -591,17 +546,17 @@ void Game :: update() {
 
     scaleX = (float)SCREEN_WIDTH / 1080;
     scaleY = (float)SCREEN_HEIGHT / 720;
-    
-    std::ofstream replayFile("replay.bin", std::ios::binary | std::ios::app);
+
     replayGame data;
-    std::cout<<player.getComponent<TransformComponent>().velocity.x<<" "<<player.getComponent<TransformComponent>().velocity.y<<std::endl;
+    //data.velocityX = player.getComponent<TransformComponent>().velocity.x;
+    //data.velocityY = player.getComponent<TransformComponent>().velocity.y;
+    //replayVector.push_back(data);
+
+    std::ofstream replayFile("replay.bin", std::ios::app | std::ios::binary);
     data.velocityX = player.getComponent<TransformComponent>().velocity.x;
     data.velocityY = player.getComponent<TransformComponent>().velocity.y;
-    replayFile.write((char*)&data, sizeof(data));
-    //replayFile.close();
-
-
-
+    data.speed = player.getComponent<TransformComponent>().speed;
+    data.changeMap = 0;
 
     for (auto& e : enemies) {
         if (e->isActive() && e->hasComponent<ColiderComponent>()) {
@@ -622,7 +577,7 @@ void Game :: update() {
 
     for (auto& pet : pets) {
         if (pet->isActive()) {
-            Collision::CheckCollisions(*pet, pets);
+            //Collision::CheckCollisions(*pet, pets);
             if (Collision::AABB(player.getComponent<ColiderComponent>(), pet->getComponent<ColiderComponent>()) && (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F)) {
                 //pet->getComponent<PetComponent>().follow = true;
                 //pet->destroy();
@@ -669,6 +624,10 @@ void Game :: update() {
         if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_F) {
 
             if (!inDungeon) {
+                if (!level1Cleared)
+                    data.changeMap = 2;
+                else
+                    data.changeMap = 3;
                 prevX = lab.getComponent<TransformComponent>().position.x;
                 prevY = lab.getComponent<TransformComponent>().position.y;
                 loadDungeon();
@@ -678,6 +637,7 @@ void Game :: update() {
                     level2Cleared = true;
                 }
                 level1Cleared = true;
+                data.changeMap = 1;
                 backToIsland(prevX, prevY);
             }
             inDungeon = !inDungeon;
@@ -706,6 +666,14 @@ void Game :: update() {
             player.getComponent<TransformComponent>().isKnockbacked = false;
         }
     }
+    for (auto& e : enemies) {
+        if (!e->isActive()) {
+            player.getComponent<PlayerComponent>().enemiesKilled++;
+        }
+    }
+
+    replayFile.write(reinterpret_cast<char*>(&data), sizeof(data));
+    replayFile.close();
 
     GameLogic::CameraSystem(player);
 
@@ -777,23 +745,12 @@ void Game::renderMainMenu() {
     SDL_Rect srcRect{0,0,1920,1280}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
     SDL_SetTextureAlphaMod(mainmenuscreen, 100);
 
-   /*users data;
-    std::ifstream highscores("highscores.bin", std::ios::binary);
-    if (highscores.is_open()) {
-        while (highscores.read((char*)&data, sizeof(data))) {
-            Texture::RenderText(data.name, 2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2, 1);
-        }
-    }
-    highscores.close();*/
-
     Texture::Draw(mainmenuscreen, srcRect, destRect, SDL_FLIP_NONE);
     Texture::Draw(button_play, play_button.getComponent<buttonComponent>().srcRect, play_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_exit, quit_button.getComponent<buttonComponent>().srcRect, quit_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_options, options_button.getComponent<buttonComponent>().srcRect, options_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_load_game, load_button.getComponent<buttonComponent>().srcRect, load_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
     Texture::Draw(button_replay, replay_button.getComponent<buttonComponent>().srcRect, replay_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::RenderNumber(69, SCREEN_WIDTH-100, 10, 1);
-    Texture::RenderText("sigma boy", SCREEN_WIDTH-100, 30, 0.5);
 
     SDL_RenderPresent(renderer);
 }
@@ -818,6 +775,7 @@ void Game::updateOptions() {
             SCREEN_WIDTH = 1080;
             SCREEN_HEIGHT = 720;
             SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+            SDL_SetWindowFullscreen(window, 0);
             centerWindow(window);
         }
     }
@@ -828,6 +786,7 @@ void Game::updateOptions() {
             SCREEN_WIDTH = 1440;
             SCREEN_HEIGHT = 960;
             SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+            SDL_SetWindowFullscreen(window, 0);
             centerWindow(window);
         }
     }
@@ -835,10 +794,10 @@ void Game::updateOptions() {
         SDL_SetTextureBlendMode(button_play, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(button_play, 100);
         if (clicked) {
-            SCREEN_WIDTH = 1800;
-            SCREEN_HEIGHT = 1024;
-            SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
-            centerWindow(window);
+            SCREEN_WIDTH = 1920;
+            SCREEN_HEIGHT = 1080;
+            flags = SDL_WINDOW_FULLSCREEN;
+            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
         }
     }
 }
@@ -909,33 +868,52 @@ void Game :: initGameOver() {
         float ypos = SCREEN_HEIGHT / 3;
 
         restart_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos, 1024, 1024, "Restart");
+        back_to_menu_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos + 120, 1024, 1024, "Back to menu");
+
+        std::ofstream replay_file("replay.bin", std::ios::binary);
+        replayGame data;
+        for (int i=0; i<replayData.size(); ++i) {
+            replay_file.write(reinterpret_cast<char*>(&data), sizeof(data));
+        }
+        replay_file.close();
 }
 void Game::updateGameOver() {
     SDL_Rect mouse {0, 0, 1, 1};
     SDL_GetMouseState(&mouse.x, &mouse.y);
-    SDL_SetTextureAlphaMod(button_resume, 255);
+    SDL_SetTextureAlphaMod(button_play_again, 255);
+    SDL_SetTextureAlphaMod(button_back_to_menu, 255);
 
     if (Collision::AABB(restart_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_resume, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_resume, 100);
+        SDL_SetTextureBlendMode(button_play_again, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(button_play_again, 100);
         if (clicked){
             resetGame();
             currentState = GameState::PLAYING;
         }
     }
+    else if (Collision::AABB(back_to_menu_button.getComponent<buttonComponent>().destRect, mouse)) {
+        SDL_SetTextureBlendMode(button_back_to_menu, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(button_back_to_menu, 100);
+        if (clicked){
+            currentState = GameState::MAIN_MENU;
+        }
+    }
 }
 void Game::renderGameOver() {
     SDL_RenderClear(renderer);
-    /*std::ifstream highscores("highscores.bin", std::ios::binary);
+    std::ifstream highscores("highscores.bin", std::ios::binary);
     users user;
-    for (int i=0; i<3; i++) {
-        highscores.read((char*)&user, sizeof(user));
-        Texture::RenderText(user.name,SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + i * 30, SDL_FLIP_NONE);
-        Texture::RenderNumber(user.score, SCREEN_WIDTH / 2 + user.name.size() * 16, SCREEN_HEIGHT / 3 + i * 30, SDL_FLIP_NONE);
+    int counter = 0;
+    while (highscores.read((char*)&user, sizeof(user)) && counter < 5) {
+        Texture::RenderText(user.name,2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 3 + counter * 50, 1);
+        Texture::RenderNumber(user.score, 2 * SCREEN_WIDTH / 3 + 200, SCREEN_HEIGHT / 3 + counter * 50, 1);
+        counter++;
     }
-    highscores.close();*/
-    Texture::Draw(button_resume, restart_button.getComponent<buttonComponent>().srcRect, restart_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-
+    highscores.close();
+    Texture::RenderText("USERNAME", 2 * SCREEN_WIDTH / 3 - 20, SCREEN_HEIGHT / 3 - 50, 1);
+    Texture::RenderText("SCORE", 2 * SCREEN_WIDTH / 3 + 180, SCREEN_HEIGHT / 3 - 50, 1);
+    Texture::Draw(button_play_again, restart_button.getComponent<buttonComponent>().srcRect, restart_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+    Texture::Draw(button_back_to_menu, back_to_menu_button.getComponent<buttonComponent>().srcRect, back_to_menu_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
 
     SDL_RenderPresent(renderer);
 }
@@ -944,7 +922,7 @@ void Game::renderUserInput() {
     SDL_RenderClear(renderer);
 
     Texture::RenderText("ENTER USERNAME: ", SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 - 25, 1);
-    Texture::RenderText(username, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 1);
+    Texture::RenderText(username, SCREEN_WIDTH / 2 - username.size() * 16, SCREEN_HEIGHT / 2, 1);
 
     SDL_RenderPresent(renderer);
 }
@@ -953,7 +931,6 @@ void Game :: render() {
     SDL_RenderClear(renderer);
 
     for (auto& t : tiles) t->draw();
-    for (auto& t : turrets) t->draw();
     for (auto& p : pets) p->draw();
     for (auto& p : players) p->draw();
     for (auto& e : enemies) e->draw();
@@ -989,11 +966,17 @@ void Game :: render() {
         Texture::Draw(savedPet, srcRect, destRect, SDL_FLIP_NONE);
         SDL_SetTextureAlphaMod(savedPet, 255);
     }
-
     SDL_RenderPresent(renderer);
 
 }
 
+void Game::calculateScore() {
+    score = player.getComponent<HPComponent>().healthPoints * 50 + player.getComponent<PlayerComponent>().animals_saved * 100 + player.getComponent<PlayerComponent>().enemiesKilled * 75;
+    if (level1Cleared)
+        score += 300;
+    if (level2Cleared)
+        score += 300;
+}
 
 
 void Game::centerWindow(SDL_Window* window) {
@@ -1021,6 +1004,8 @@ void Game::saveGame() {
     data.animalsSaved = player.getComponent<PlayerComponent>().animals_saved;
     data.level1cleared = level1Cleared;
     data.inDungeon = inDungeon;
+    data.username = username;
+    data.score = score;
     saveFile.write((char*)&data, sizeof(data));
     saveFile.close();
 }
@@ -1038,29 +1023,39 @@ void Game::loadGame() {
         player.getComponent<PlayerComponent>().animals_saved = data.playerAmmo;
         level1Cleared = data.level1cleared;
         inDungeon = data.inDungeon;
+        username = data.username;
+        score = data.score;
+
         if (!inDungeon) {
             tiles.clear();
             mapFile = "assets/map_tiles.png";
             Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
         }
-        else if (inDungeon && level1Cleared) {
+        else {
             loadDungeon();
-            //tiles.clear();
-            //mapFile = "assets/lab_tiles.png";
-            //Map::LoadMap("assets/level2.txt", Map::sizeX, Map::sizeY);
-        }//
-       else if (inDungeon) {
-           loadDungeon();
-           //tiles.clear();
-           //mapFile = "assets/lab_tiles.png";
-           //Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
-       }
+        }
     }
 
     saveFile.close();
 }
 void Game::initReplay() {
+    enemies.clear();
+    pets.clear();
+
     replayFile.open("replay.bin", std::ios::binary);
+    if (!replayFile.is_open()) {
+        std::cout << "Failed to open replay file!" << std::endl;
+        return;
+    }
+
+    // Load all replay data at once
+    replayGame data;
+    while (replayFile.read((char*)&data, sizeof(data))) {
+        replayData.push_back(data);
+    }
+    replayFile.close();
+
+    // Rest of your init...
     mapFile = "assets/map_tiles.png";
     Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
     player.getComponent<TransformComponent>().position.x = 256;
@@ -1070,19 +1065,48 @@ void Game::initReplay() {
 void Game::replay() {
     manager.refresh();
     manager.update();
-
-    if (replayFile.is_open()) {
-        replayGame data;
-        if (replayFile.read((char*)&data, sizeof(data))) {
-            std::cout<<data.velocityX<<" "<<data.velocityY<<std::endl;
-            player.getComponent<TransformComponent>().velocity.x = data.velocityX;
-            player.getComponent<TransformComponent>().velocity.y = data.velocityY;
-            //player.getComponent<TransformComponent>().position.x += data.velocityX * player.getComponent<TransformComponent>().speed;
-            //player.getComponent<TransformComponent>().position.y += data.velocityY * player.getComponent<TransformComponent>().speed;
-        }
-        else
-        replayFile.close();
+    replayGame data;
+    static size_t currentFrame = 0;
+    if (currentFrame < replayData.size()) {
+        data = replayData[currentFrame++];
+        std::cout<<data.velocityX<<" "<<data.velocityY<<std::endl;
+        player.getComponent<TransformComponent>().velocity.x = data.velocityX;
+        player.getComponent<TransformComponent>().velocity.y = data.velocityY;
+        player.getComponent<TransformComponent>().speed = data.speed;
     }
+    if (data.changeMap == 1) {
+        tiles.clear();
+        Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
+    }
+    else if (data.changeMap == 2) {
+        tiles.clear();
+        mapFile = "assets/lab_tiles.png";
+        Map::LoadMap("assets/lab.txt", Map::sizeX, Map::sizeY);
+        player.getComponent<TransformComponent>().position.x = 256;
+        player.getComponent<TransformComponent>().position.y = 132;
+    }
+    else if (data.changeMap == 3) {
+        tiles.clear();
+        mapFile = "assets/lab_tiles.png";
+        Map::LoadMap("assets/level2.txt", Map::sizeX, Map::sizeY);
+        player.getComponent<TransformComponent>().position.x = 940;
+        player.getComponent<TransformComponent>().position.y = 1130;
+    }
+
+    if (player.getComponent<TransformComponent>().velocity.x > 0) {
+        player.getComponent<SpriteComponent>().spriteFlip =SDL_FLIP_NONE;
+        player.getComponent<SpriteComponent>().play("walk");
+    } else if (player.getComponent<TransformComponent>().velocity.x < 0) {
+        player.getComponent<SpriteComponent>().spriteFlip = SDL_FLIP_HORIZONTAL;
+        player.getComponent<SpriteComponent>().play("walk");
+    } else if (player.getComponent<TransformComponent>().velocity.y > 0) {
+        player.getComponent<SpriteComponent>().play("walk");
+    } else if (player.getComponent<TransformComponent>().velocity.y < 0) {
+        player.getComponent<SpriteComponent>().play("walk");
+    } else {
+        player.getComponent<SpriteComponent>().play("idle"); // If no movement, set idle animation
+    }
+    GameLogic::CameraSystem(player);
 }
 void Game::renderReplay(){
     SDL_RenderClear(renderer);
@@ -1095,18 +1119,23 @@ void Game::renderReplay(){
 
 void Game::resetGame() {
 
+    tiles.clear();
+    enemies.clear();
+    pets.clear();
+
+    for (auto& e : enemies) e->removeAllComponentsAndGroups();
+    for (auto& p : pets) p->removeAllComponentsAndGroups();
+
     inDungeon = false;
     level1Cleared = false;
     level2Cleared = false;
-
-    //pets.clear();
-    //enemies.clear();
-    //tiles.clear();
+    game_over = false;
+    score = 0;
+    highscoreUpdated = false;
 
     mapFile = "assets/map_tiles.png";
     Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
-    player.reactivate();
     player.getComponent<TransformComponent>().position.x = 256;
     player.getComponent<TransformComponent>().position.y = 132;
     player.getComponent<HPComponent>().healthPoints = 3;
@@ -1118,8 +1147,9 @@ void Game::resetGame() {
 }
 
 void Game::highscore(std::string username, int score) {
+    std::cout<<"called"<<std::endl;
     users user;
-    user.name = username;
+    strcpy(user.name, username.c_str());
     user.score = score;
 
     std::ifstream highscoreFile("highscores.bin", std::ios::binary);
@@ -1128,13 +1158,13 @@ void Game::highscore(std::string username, int score) {
     bool check = false;
     while (highscoreFile.read((char*)&other, sizeof(other))) {
         if (user.score > other.score && !check) {
-            newFile.write((char*)&other, sizeof(other));
+            newFile.write((char*)&user, sizeof(user));
             check = true;
         }
         newFile.write((char*)&other, sizeof(other));
     }
     if (!check) {
-        newFile.write((char*)&other, sizeof(other));
+        newFile.write((char*)&user, sizeof(user));
     }
     newFile.close();
     highscoreFile.close();
@@ -1142,6 +1172,16 @@ void Game::highscore(std::string username, int score) {
     rename("new.bin", "highscores.bin");
 }
 
+void Game::outputScores() {
+    users user;
+    std::ifstream data("highscores.bin", std::ios::binary);
+    if (data.is_open()) {
+        while (data.read((char*)&user, sizeof(user))) {
+            std::cout<<user.name<< " " << user.score << std::endl;
+        }
+    }
+    data.close();
+}
 
 void Game::clean() {
     SDL_DestroyWindow(window);
