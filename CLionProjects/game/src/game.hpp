@@ -19,6 +19,9 @@ class Game {
     SDL_Window *window;
 
 public:
+
+    static bool replayFinished;
+    static bool resetReplay;
     static bool highscoreUpdated;
     static int flags;
     std::string username;
@@ -41,32 +44,13 @@ public:
     static int all_pets;
     static int LETTER_WIDTH, LETTER_HEIGHT;
 
-
-
-
     SDL_Texture *bulletTexture;
     SDL_Texture *hpTexture;
     SDL_Texture *savedPet;
 
-    SDL_Texture *game_overTexture;
-    SDL_Texture *winTexture;
     SDL_Texture *mainmenuscreen;
-    SDL_Texture *pauseMenu;
-    SDL_Texture *options;
+    SDL_Texture *background;
 
-    SDL_Texture *button_options;
-    SDL_Texture *button_exit;
-    SDL_Texture *button_play;
-    SDL_Texture *button_small;
-    SDL_Texture *button_large;
-    SDL_Texture *button_medium;
-    SDL_Texture *button_resume;
-    SDL_Texture *button_main_menu;
-    SDL_Texture *button_back_to_menu;
-    SDL_Texture *button_save_game;
-    SDL_Texture *button_load_game;
-    SDL_Texture *button_replay;
-    SDL_Texture *button_play_again;
 
     static SDL_Texture *numbersTexture;
     static SDL_Texture *lettersTexture;
@@ -84,37 +68,23 @@ public:
     static void Dungeon();
     void handleEvents();
     void centerWindow(SDL_Window*);
-    void RenderNumber(int number, int x, int y, float scale);
-    void calculateScore();
+
 
     void saveGame();
     void loadGame();
+
+    void saveReplay();
     void highscore(std::string username, int score);
     void outputScores();
+    void calculateScore();
 
     void initReplay();
     void replay();
     void renderReplay();
 
-
-    void initMainMenu();
-    void updateMainMenu();
     void renderMainMenu();
-
-    void initOptions();
-    void renderOptions();
-    void updateOptions();
-
-    void initPause();
     void renderPause();
-    void updatePause();
-
-    void initGameOver();
-    void updateGameOver();
     void renderGameOver();
-
-    void initUserInput();
-    void updateUserInput();
     void renderUserInput();
 
     void run();

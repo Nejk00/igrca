@@ -14,6 +14,16 @@
 #include"Clock.hpp"
 #include "ECS/buttonComponent.hpp"
 #include"ECS/TurretComponent.hpp"
+
+struct enemy {
+    float posX, posY;
+    int healthpoints;
+    bool alive;
+};
+struct pet {
+    float posX, posY;
+    bool saved;
+};
 struct users {
     char name[12];
     int score;
@@ -24,10 +34,17 @@ struct replayGame {
 };
 
 struct saveGame {
-    float playerX, playerY, prevX, prevY;
+    float playerX, playerY, prevX, prevY, labX, labY;
     int playerHealth, playerAmmo, animalsSaved, score;
     bool inDungeon, level1cleared;
-    std::string username;
+    char username[12];
+
+};
+struct saveGame2 {
+    float playerX, playerY, prevX, prevY, labX, labY;
+    int playerHealth, playerAmmo, animalsSaved, score, petCount, enemyCount;
+    bool inDungeon, level1cleared;
+    char username[12];
 
 };
 
@@ -45,7 +62,8 @@ GameState currentState = GameState::MAIN_MENU;
 
 bool Game::game_over = false;
 float Game:: prevX = 0, Game:: prevY = 0;
-
+bool Game:: replayFinished = false;
+bool Game::resetReplay = false;
 bool Game :: level1Cleared = false;
 bool Game :: level2Cleared = false;
 bool Game::highscoreUpdated = false;
@@ -78,26 +96,12 @@ std::vector<replayGame > replayVector;
 std::vector<Entity*> bulletPool;
 std::vector<Entity*> enemyPool;
 std::vector<Entity*> petPool;
-std::vector<replayGame> replayData;
+static std::vector<replayGame> replayData;
 
 int Map::sizeX = 60;
 int Map::sizeY = 60;
 
 std::string  mapFile = "assets/map_tiles.png";
-
-auto& back_to_menu_button(manager.addEntity());
-auto& restart_button(manager.addEntity());
-auto&replay_button(manager.addEntity());
-auto& load_button(manager.addEntity());
-auto& save_button(manager.addEntity());
-auto& resume_button(manager.addEntity());
-auto& back_to_menu(manager.addEntity());
-auto& resize_small_button(manager.addEntity());
-auto& resize_medium_button(manager.addEntity());
-auto& resize_large_button(manager.addEntity());
-auto& play_button(manager.addEntity());
-auto& quit_button(manager.addEntity());
-auto& options_button(manager.addEntity());
 
 auto& player(manager.addEntity());
 
@@ -123,8 +127,6 @@ auto& pet8(manager.addEntity());
 auto& pet9(manager.addEntity());
 auto& pet10(manager.addEntity());
 
-
-auto& turret(manager.addEntity());
 auto& lab(manager.addEntity());
 
 
@@ -171,26 +173,12 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
 
         bulletTexture = Texture::LoadTexture("assets/player_bullet.png");
         hpTexture = Texture::LoadTexture("assets/heart.png");
-        game_overTexture = Texture::LoadTexture("assets/game_over.png");
-        winTexture = Texture::LoadTexture("assets/win.png");
         savedPet = Texture::LoadTexture("assets/pet.png");
-        button_play = Texture::LoadTexture("assets/play_button.png");
         mainmenuscreen = Texture::LoadTexture("assets/mainmenu.png");
-        button_exit = Texture::LoadTexture("assets/exit_button.png");
-        button_options = Texture::LoadTexture("assets/options_button.png");
-        pauseMenu = Texture::LoadTexture("assets/pauseMenu.png");
-        button_small = Texture::LoadTexture("assets/small_button.png");
-        button_medium = Texture::LoadTexture("assets/medium_button.png");
-        button_large = Texture::LoadTexture("assets/large_button.png");
-        button_resume = Texture::LoadTexture("assets/resume_button.png");
-        button_back_to_menu = Texture::LoadTexture("assets/back_to_menu_button.png");
-        options = Texture::LoadTexture("assets/background_options.png");
-        button_save_game = Texture::LoadTexture("assets/save_game_button.png");
-        button_load_game = Texture::LoadTexture("assets/load_game_button.png");
-        button_replay = Texture::LoadTexture("assets/replay_button.png");
         numbersTexture = Texture::LoadTexture("assets/numbers.png");
         lettersTexture = Texture::LoadTexture("assets/letters.png");
-        button_play_again = Texture::LoadTexture("assets/play_again_button.png");
+        background = Texture::LoadTexture("assets/background.png");
+
 
         Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
 
@@ -207,7 +195,6 @@ void Game :: init(const char* title, int xpos, int ypos, bool fullscreen) {
         player.addComponent<PlayerComponent>();
         player.addGroup(groupPlayers);
 
-    outputScores();
 }
 
 void Game::AddTile(int srcX, int srcY, int xpos, int ypos, bool hasCollision) {
@@ -417,10 +404,7 @@ void Game::backToIsland(float prevX, float prevY) {
 void Game::handleEvents() {
     static int max_ammo = 5;
     static int ammo_reload = 0;
-    static bool mainMenuinitialized = false;
-    static bool optionsInitialized = false;
-    static bool pauseInitialized = false;
-    static bool game_over_initialized = false;
+    static bool ReplaySaved = false;
     static bool ReplayInitialized = false;
 
     SDL_PollEvent(&event);
@@ -433,11 +417,20 @@ void Game::handleEvents() {
     }
     switch (currentState) {
         case GameState::MAIN_MENU:
-            if (!mainMenuinitialized) {
-                initMainMenu();
-                mainMenuinitialized = true;
+            if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
+                currentState = GameState::USER_INPUT;
             }
-            updateMainMenu();
+            else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_L) {
+                loadGame();
+                currentState = GameState::PLAYING;
+            }
+            else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_R) {
+                currentState = GameState::REPLAY;
+            }
+
+            else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_E) {
+                isRunning = false;
+            }
             renderMainMenu();
         break;
 
@@ -446,48 +439,53 @@ void Game::handleEvents() {
             render();
         break;
 
-        case GameState::OPTIONS:
-           if (!optionsInitialized) {
-               initOptions();
-               optionsInitialized = true;
-           }
-           updateOptions();
-           renderOptions();
-        break;
-
         case GameState::PAUSED:
-            if (!pauseInitialized) {
-                initPause();
-                pauseInitialized = true;
+            if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_R) {
+                currentState = GameState::PLAYING;
             }
-            updatePause();
+            else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+                currentState = GameState::MAIN_MENU;
+            }
+            else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_S) {
+                saveGame();
+            }
             renderPause();
         break;
+
         case GameState::REPLAY:
             if (!ReplayInitialized) {
                 initReplay();
                 ReplayInitialized = true;
             }
+            if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_R) {
+                resetReplay = true;
+            }
             replay();
             renderReplay();
         break;
         case GameState::GAME_OVER:
-            if (!game_over_initialized) {
-                initGameOver();
-                game_over_initialized = true;
-            }
             if (!highscoreUpdated) {
                 calculateScore();
                 highscore(username, score);
                 highscoreUpdated = true;
             }
-            updateGameOver();
-            renderGameOver();
+        if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
+            resetGame();
+            currentState = GameState::PLAYING;
+        }
+        else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+            resetGame();
+            currentState = GameState::MAIN_MENU;
+        }
+        renderGameOver();
         break;
+
         case GameState::USER_INPUT:
+            SDL_StartTextInput();
 
         if (event.type == SDL_TEXTINPUT) {
             if (username.length() < 12) {
+                SDL_StartTextInput();
                 username += event.text.text;
             }
         }
@@ -507,11 +505,12 @@ void Game::handleEvents() {
     if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE && currentState == GameState::PLAYING) {
         currentState = GameState::PAUSED;
     }
-    else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE && currentState == GameState::OPTIONS) {
+    else if(event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE && (currentState == GameState::OPTIONS || currentState == GameState::REPLAY)) {
         currentState = GameState::MAIN_MENU;
     }
-    if (game_over || level2Cleared)
+    if (game_over) {
         currentState = GameState::GAME_OVER;
+    }
 
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
@@ -548,9 +547,6 @@ void Game :: update() {
     scaleY = (float)SCREEN_HEIGHT / 720;
 
     replayGame data;
-    //data.velocityX = player.getComponent<TransformComponent>().velocity.x;
-    //data.velocityY = player.getComponent<TransformComponent>().velocity.y;
-    //replayVector.push_back(data);
 
     std::ofstream replayFile("replay.bin", std::ios::app | std::ios::binary);
     data.velocityX = player.getComponent<TransformComponent>().velocity.x;
@@ -675,6 +671,9 @@ void Game :: update() {
     replayFile.write(reinterpret_cast<char*>(&data), sizeof(data));
     replayFile.close();
 
+    if (level2Cleared)
+        game_over = true;
+
     GameLogic::CameraSystem(player);
 
     Collision::CheckCollisions(player, tiles);
@@ -686,234 +685,72 @@ void Game :: update() {
     }
 
 }
-void Game::initMainMenu() {
-    play_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 200, 1024, 1024, "assets/play_button");
-    load_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 300, 1024, 1024, "assets/load_game_button");
-    replay_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 400, 1024, 1024, "assets/replay_button" );
-    options_button.addComponent<buttonComponent>(100 + scaleX * 30, scaleY * 500, 1024, 1024, "assets/options_button");
-    quit_button.addComponent<buttonComponent>(100 + scaleX * 30,  scaleY * 600, 1024, 1024, "assets/exit_button");
-}
 
-void Game::updateMainMenu() {
-    SDL_SetTextureAlphaMod(button_play, 255);
-    SDL_SetTextureAlphaMod(button_exit, 255);
-    SDL_SetTextureAlphaMod(button_options, 255);
-    SDL_SetTextureAlphaMod(button_load_game, 255);
-    SDL_SetTextureAlphaMod(button_replay, 255);
-
-    SDL_Rect mouse {0, 0, 1, 1};
-    SDL_GetMouseState(&mouse.x, &mouse.y);
-    if (Collision::AABB(play_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_play, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_play, 100);
-        if (clicked)
-        currentState = GameState::USER_INPUT;
-    }
-    else if (Collision::AABB(quit_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_exit, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_exit, 50);
-        if (clicked)
-            isRunning = false;
-
-    }
-    else if (Collision::AABB(options_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_options, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_options, 100);
-        if (clicked)
-            currentState = GameState::OPTIONS;
-    }
-    else if (Collision::AABB(load_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_load_game, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_load_game, 100);
-        if (clicked){
-            loadGame();
-            currentState = GameState::PLAYING;
-        }
-    }
-    else if (Collision::AABB(replay_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_replay, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_replay, 100);
-        if (clicked){
-            currentState = GameState::REPLAY;
-        }
-    }
-}
 void Game::renderMainMenu() {
     SDL_RenderClear(renderer);
-    static int x = 30;
 
     SDL_Rect srcRect{0,0,1920,1280}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
     SDL_SetTextureAlphaMod(mainmenuscreen, 100);
 
     Texture::Draw(mainmenuscreen, srcRect, destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_play, play_button.getComponent<buttonComponent>().srcRect, play_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_exit, quit_button.getComponent<buttonComponent>().srcRect, quit_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_options, options_button.getComponent<buttonComponent>().srcRect, options_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_load_game, load_button.getComponent<buttonComponent>().srcRect, load_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_replay, replay_button.getComponent<buttonComponent>().srcRect, replay_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+
+    Texture::RenderText("PRESS ENTER TO PLAY", 50, 250, 1);
+    Texture::RenderText("PRESS L TO LOAD", 50, 350, 1);
+    Texture::RenderText("PRESS R TO REPLAY", 50, 450, 1);
+    Texture::RenderText("PRESS E TO EXIT", 50, 550, 1);
 
     SDL_RenderPresent(renderer);
 }
 
-void Game::initOptions() {
-    int xpos = SCREEN_WIDTH / 2 ;
-    int ypos = SCREEN_HEIGHT / 3;
-
-    resize_small_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos, 1024, 1024, "assets/play_button");
-    resize_medium_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos + 120 * scaleY, 1024, 1024, "assets/play_button");
-    resize_large_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos + 120 * 2 * scaleY, 1024, 1024, "assets/play_button");
-}
-void Game::updateOptions() {
-    SDL_Rect mouse {0, 0, 1, 1};
-    SDL_GetMouseState(&mouse.x, &mouse.y);
-    SDL_SetTextureAlphaMod(button_play, 255);
-
-    if (Collision::AABB(resize_small_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_play, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_play, 100);
-        if (clicked) {
-            SCREEN_WIDTH = 1080;
-            SCREEN_HEIGHT = 720;
-            SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
-            SDL_SetWindowFullscreen(window, 0);
-            centerWindow(window);
-        }
-    }
-    else if (Collision::AABB(resize_medium_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_play, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_play, 100);
-        if (clicked) {
-            SCREEN_WIDTH = 1440;
-            SCREEN_HEIGHT = 960;
-            SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
-            SDL_SetWindowFullscreen(window, 0);
-            centerWindow(window);
-        }
-    }
-    else if (Collision::AABB(resize_large_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_play, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_play, 100);
-        if (clicked) {
-            SCREEN_WIDTH = 1920;
-            SCREEN_HEIGHT = 1080;
-            flags = SDL_WINDOW_FULLSCREEN;
-            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        }
-    }
-}
-void Game::renderOptions() {
-    SDL_RenderClear(renderer);
-    SDL_Rect srcRect = { 0, 0, 1024, 1024 };
-    SDL_Rect destRect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-
-    Texture::Draw(options, srcRect, destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_small, resize_small_button.getComponent<buttonComponent>().srcRect, resize_small_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_medium, resize_medium_button.getComponent<buttonComponent>().srcRect, resize_medium_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_large, resize_large_button.getComponent<buttonComponent>().srcRect, resize_large_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-
-    SDL_RenderPresent(renderer);
-}
-
-void Game::initPause() {
-    int posX = SCREEN_WIDTH / 2;
-    int posY = SCREEN_HEIGHT / 3;
-
-    resume_button.addComponent<buttonComponent>(posX - 150 * scaleX / 2, posY, 1024, 1024, "assets/play_button");
-    back_to_menu.addComponent<buttonComponent>(posX - 150 * scaleX / 2,posY + 120 * scaleY, 1024, 1024, "assets/play_button");
-    save_button.addComponent<buttonComponent>(posX - 150 * scaleX / 2, posY + 2* 120 * scaleY, 1024, 1024, "assets/play_button");
-}
-
-void Game::updatePause() {
-    SDL_Rect mouse {0, 0, 1, 1};
-    SDL_GetMouseState(&mouse.x, &mouse.y);
-    SDL_SetTextureAlphaMod(button_resume, 255);
-    SDL_SetTextureAlphaMod(button_back_to_menu, 255);
-    SDL_SetTextureAlphaMod(button_save_game, 255);
-
-    if (Collision::AABB(resume_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_resume, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_resume, 100);
-        if (clicked)
-            currentState = GameState::PLAYING;
-    }
-    else if (Collision::AABB(back_to_menu.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_back_to_menu, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_back_to_menu, 100);
-        if (clicked)
-            currentState = GameState::MAIN_MENU;
-    }
-    else if (Collision::AABB(save_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_save_game, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_save_game, 100);
-        if (clicked)
-            saveGame();
-    }
-}
 
 void Game::renderPause() {
     SDL_RenderClear(renderer);
-    SDL_SetTextureAlphaMod(pauseMenu, 40);
-    SDL_Rect srcRect{0,0,200,200}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
+    //SDL_SetTextureAlphaMod(pauseMenu, 5);
 
-    Texture::Draw(pauseMenu, srcRect, destRect, SDL_FLIP_NONE );
-    Texture::Draw(button_resume, resume_button.getComponent<buttonComponent>().srcRect, resume_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_back_to_menu, back_to_menu.getComponent<buttonComponent>().srcRect, back_to_menu.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_save_game, save_button.getComponent<buttonComponent>().srcRect, save_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+    for (auto& t : tiles) t->draw();
+    for (auto& p : pets) p->draw();
+    for (auto& p : players) p->draw();
+    for (auto& e : enemies) e->draw();
+    for (auto& p : projectiles) p->draw();
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180); // 128 = 50% opacity
+
+    SDL_Rect overlay = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+    SDL_RenderFillRect(renderer, &overlay);
+
+    Texture::RenderText("PRESS R TO RESUME", 350, 250, 1);
+    Texture::RenderText("PRESS S TO SAVE", 350, 350, 1);
+    Texture::RenderText("PRESS ESC FOR MENU", 350, 450, 1);
+
+    //SDL_Rect srcRect{0, 0, 200, 200}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
+    //Texture::Draw(pauseMenu, srcRect, destRect, SDL_FLIP_NONE);
 
     SDL_RenderPresent(renderer);
 }
 
-void Game :: initGameOver() {
-        float xpos = SCREEN_WIDTH / 2;
-        float ypos = SCREEN_HEIGHT / 3;
-
-        restart_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos, 1024, 1024, "Restart");
-        back_to_menu_button.addComponent<buttonComponent>(xpos - 150 * scaleX / 2, ypos + 120, 1024, 1024, "Back to menu");
-
-        std::ofstream replay_file("replay.bin", std::ios::binary);
-        replayGame data;
-        for (int i=0; i<replayData.size(); ++i) {
-            replay_file.write(reinterpret_cast<char*>(&data), sizeof(data));
-        }
-        replay_file.close();
-}
-void Game::updateGameOver() {
-    SDL_Rect mouse {0, 0, 1, 1};
-    SDL_GetMouseState(&mouse.x, &mouse.y);
-    SDL_SetTextureAlphaMod(button_play_again, 255);
-    SDL_SetTextureAlphaMod(button_back_to_menu, 255);
-
-    if (Collision::AABB(restart_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_play_again, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_play_again, 100);
-        if (clicked){
-            resetGame();
-            currentState = GameState::PLAYING;
-        }
-    }
-    else if (Collision::AABB(back_to_menu_button.getComponent<buttonComponent>().destRect, mouse)) {
-        SDL_SetTextureBlendMode(button_back_to_menu, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(button_back_to_menu, 100);
-        if (clicked){
-            currentState = GameState::MAIN_MENU;
-        }
-    }
-}
 void Game::renderGameOver() {
     SDL_RenderClear(renderer);
+
+    SDL_Rect srcRect{0,0,1024,1024}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_SetTextureAlphaMod(background, 100);
+
+    Texture::Draw(background, srcRect, destRect, SDL_FLIP_NONE);
+
     std::ifstream highscores("highscores.bin", std::ios::binary);
     users user;
     int counter = 0;
     while (highscores.read((char*)&user, sizeof(user)) && counter < 5) {
-        Texture::RenderText(user.name,2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 3 + counter * 50, 1);
-        Texture::RenderNumber(user.score, 2 * SCREEN_WIDTH / 3 + 200, SCREEN_HEIGHT / 3 + counter * 50, 1);
+        Texture::RenderText(user.name,2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 4 + counter * 50 - 40, 1);
+        Texture::RenderNumber(user.score, 2 * SCREEN_WIDTH / 3 + 200, SCREEN_HEIGHT / 4 + counter * 50 - 40, 1);
         counter++;
     }
     highscores.close();
-    Texture::RenderText("USERNAME", 2 * SCREEN_WIDTH / 3 - 20, SCREEN_HEIGHT / 3 - 50, 1);
-    Texture::RenderText("SCORE", 2 * SCREEN_WIDTH / 3 + 180, SCREEN_HEIGHT / 3 - 50, 1);
-    Texture::Draw(button_play_again, restart_button.getComponent<buttonComponent>().srcRect, restart_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
-    Texture::Draw(button_back_to_menu, back_to_menu_button.getComponent<buttonComponent>().srcRect, back_to_menu_button.getComponent<buttonComponent>().destRect, SDL_FLIP_NONE);
+
+    Texture::RenderText("USERNAME", 2 * SCREEN_WIDTH / 3 - 20, SCREEN_HEIGHT / 3 - 150, 1);
+    Texture::RenderText("SCORE", 2 * SCREEN_WIDTH / 3 + 180, SCREEN_HEIGHT / 3 - 150, 1);
+    Texture::RenderText("PRESS ENTER TO PLAY AGAIN", 50, 320, 1.2);
+    Texture::RenderText("PRESS ESC FOR MENU", 50, 420, 1.2);
 
     SDL_RenderPresent(renderer);
 }
@@ -921,8 +758,13 @@ void Game::renderGameOver() {
 void Game::renderUserInput() {
     SDL_RenderClear(renderer);
 
-    Texture::RenderText("ENTER USERNAME: ", SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 - 25, 1);
-    Texture::RenderText(username, SCREEN_WIDTH / 2 - username.size() * 16, SCREEN_HEIGHT / 2, 1);
+    SDL_Rect srcRect{0,0,1024,1024}, destRect{0,0,SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_SetTextureAlphaMod(background, 100);
+
+    Texture::Draw(background, srcRect, destRect, SDL_FLIP_NONE);
+
+    Texture::RenderText("ENTER USERNAME: ", 100, 200, 3);
+    Texture::RenderText(username, SCREEN_WIDTH / 2 - username.size() * 20, SCREEN_HEIGHT / 2, 2);
 
     SDL_RenderPresent(renderer);
 }
@@ -979,24 +821,13 @@ void Game::calculateScore() {
 }
 
 
-void Game::centerWindow(SDL_Window* window) {
-    int windowWidth, windowHeight;
-    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-
-    SDL_Rect displayBounds;
-    SDL_GetDisplayBounds(0, &displayBounds);
-
-    int x = (displayBounds.w - windowWidth) / 2;
-    int y = (displayBounds.h - windowHeight) / 2;
-
-    SDL_SetWindowPosition(window, x, y);
-}
-
 void Game::saveGame() {
     std::ofstream saveFile("saved_game.bin", std::ios::binary);
     struct saveGame data;
     data.playerX = player.getComponent<TransformComponent>().position.x;
     data.playerY = player.getComponent<TransformComponent>().position.y;
+    data.labX = lab.getComponent<TransformComponent>().position.x;
+    data.labY = lab.getComponent<TransformComponent>().position.y;
     data.prevX = prevX;
     data.prevY = prevY;
     data.playerAmmo = player.getComponent<PlayerComponent>().ammo_count;
@@ -1004,7 +835,7 @@ void Game::saveGame() {
     data.animalsSaved = player.getComponent<PlayerComponent>().animals_saved;
     data.level1cleared = level1Cleared;
     data.inDungeon = inDungeon;
-    data.username = username;
+    strcpy(data.username, username.c_str());
     data.score = score;
     saveFile.write((char*)&data, sizeof(data));
     saveFile.close();
@@ -1016,6 +847,8 @@ void Game::loadGame() {
         saveFile.read((char*)&data, sizeof(data));
         player.getComponent<TransformComponent>().position.x = data.playerX;
         player.getComponent<TransformComponent>().position.y = data.playerY;
+        lab.getComponent<TransformComponent>().position.x = data.labX;
+        lab.getComponent<TransformComponent>().position.y = data.labY;
         prevX = data.prevX;
         prevY = data.prevY;
         player.getComponent<PlayerComponent>().ammo_count = data.playerAmmo;
@@ -1026,18 +859,18 @@ void Game::loadGame() {
         username = data.username;
         score = data.score;
 
-        if (!inDungeon) {
+        /*if (!inDungeon) {
             tiles.clear();
             mapFile = "assets/map_tiles.png";
             Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
-        }
-        else {
+        }*/
+        if (inDungeon)
             loadDungeon();
-        }
     }
 
     saveFile.close();
 }
+
 void Game::initReplay() {
     enemies.clear();
     pets.clear();
@@ -1055,24 +888,42 @@ void Game::initReplay() {
     }
     replayFile.close();
 
-    // Rest of your init...
-    mapFile = "assets/map_tiles.png";
-    Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
     player.getComponent<TransformComponent>().position.x = 256;
     player.getComponent<TransformComponent>().position.y = 132;
 }
-
+void Game :: saveReplay() {
+    std::ofstream replay_file("replay.bin", std::ios::binary);
+    replayGame data;
+    for (int i=0; i<replayData.size(); ++i) {
+        replay_file.write(reinterpret_cast<char*>(&data), sizeof(data));
+    }
+    replay_file.close();
+}
 void Game::replay() {
     manager.refresh();
     manager.update();
+
     replayGame data;
     static size_t currentFrame = 0;
+    if (resetReplay) {
+        player.getComponent<TransformComponent>().position.x = 256;
+        player.getComponent<TransformComponent>().position.y = 132;
+        tiles.clear();
+        mapFile = "assets/map_tiles.png";
+        Map::LoadMap("assets/mapa.txt", Map::sizeX, Map::sizeY);
+        currentFrame = 0;
+        resetReplay = false;
+        replayFinished = false;
+    }
+
     if (currentFrame < replayData.size()) {
         data = replayData[currentFrame++];
-        std::cout<<data.velocityX<<" "<<data.velocityY<<std::endl;
         player.getComponent<TransformComponent>().velocity.x = data.velocityX;
         player.getComponent<TransformComponent>().velocity.y = data.velocityY;
         player.getComponent<TransformComponent>().speed = data.speed;
+    }
+    else {
+        replayFinished = true;
     }
     if (data.changeMap == 1) {
         tiles.clear();
@@ -1104,8 +955,9 @@ void Game::replay() {
     } else if (player.getComponent<TransformComponent>().velocity.y < 0) {
         player.getComponent<SpriteComponent>().play("walk");
     } else {
-        player.getComponent<SpriteComponent>().play("idle"); // If no movement, set idle animation
+        player.getComponent<SpriteComponent>().play("idle");
     }
+    Collision::CheckCollisions(player , tiles);
     GameLogic::CameraSystem(player);
 }
 void Game::renderReplay(){
@@ -1113,7 +965,10 @@ void Game::renderReplay(){
 
     for (auto& t : tiles) t->draw();
     for (auto& p : players) p->draw();
-
+    Texture::RenderText("PRESS R TO RESTART", 10, 10, 1);
+    if (replayFinished) {
+        Texture::RenderText("REPLAY FINISHED", 150, SCREEN_HEIGHT / 2, 3);
+    }
     SDL_RenderPresent(renderer);
 }
 
